@@ -35,6 +35,36 @@ const toFieldIssues = (issues: { path: PropertyKey[]; message: string }[]): Prod
 const collectWarnings = (costPrice: number, sellPrice: number): ProductWarning[] =>
   sellPrice < costPrice ? ['sell_price_below_cost'] : [];
 
+export const byName = (a: { name: string }, b: { name: string }): number =>
+  a.name.localeCompare(b.name, 'id');
+
+// Pencarian fuzzy: tiap token query harus muncul sebagai subsequence nama
+// ("indm grg" cocok dengan "Indomie Goreng"). Toleran typo ringan kasir.
+const isSubsequence = (needle: string, haystack: string): boolean => {
+  let cursor = 0;
+  for (const char of needle) {
+    cursor = haystack.indexOf(char, cursor);
+    if (cursor === -1) {
+      return false;
+    }
+    cursor += 1;
+  }
+  return true;
+};
+
+export const matchesProductName = (name: string, query: string): boolean => {
+  const haystack = name.trim().toLowerCase();
+  const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) {
+    return true;
+  }
+  return tokens.every((token) => isSubsequence(token, haystack));
+};
+
+export type CategoryWriteResult =
+  | { status: 'ok'; category: Category }
+  | { status: 'invalid' };
+
 export class ProductService {
   private readonly database: Database;
 
@@ -68,6 +98,7 @@ export class ProductService {
         raw.barcode = data.barcode;
         raw.categoryId = data.categoryId;
         raw.unit = data.unit;
+        raw.customUnitLabel = data.customUnitLabel;
         raw.photoPath = null;
         raw.costPrice = data.costPrice;
         raw.sellPrice = data.sellPrice;
@@ -117,6 +148,10 @@ export class ProductService {
         raw.barcode = data.barcode;
         raw.categoryId = data.categoryId;
         raw.unit = data.unit;
+        raw.customUnitLabel = data.customUnitLabel;
+        if (data.isActive !== undefined) {
+          raw.isActive = data.isActive;
+        }
         raw.costPrice = data.costPrice;
         raw.sellPrice = data.sellPrice;
         raw.minStock = data.minStock;
@@ -155,6 +190,71 @@ export class ProductService {
 
   async getByBarcode(barcode: string): Promise<Product | null> {
     return this.findActiveByBarcode(barcode);
+  }
+
+  // Semua produk non-deleted (termasuk nonaktif — admin tetap bisa edit/aktifkan).
+  async listProducts(): Promise<Product[]> {
+    const rows = await this.database
+      .get<Product>('products')
+      .query(Q.where('deleted', false))
+      .fetch();
+    return rows.sort(byName);
+  }
+
+  // Barcode exact-match diprioritaskan di atas hasil fuzzy nama (US-04/T1.3).
+  async searchProducts(query: string): Promise<Product[]> {
+    const trimmed = query.trim();
+    if (trimmed === '') {
+      return this.listProducts();
+    }
+
+    const [barcodeMatch, all] = await Promise.all([
+      this.findActiveByBarcode(trimmed),
+      this.listProducts(),
+    ]);
+    const nameMatches = all.filter((product) => matchesProductName(product.name, trimmed));
+    if (barcodeMatch === null) {
+      return nameMatches;
+    }
+    return [
+      barcodeMatch,
+      ...nameMatches.filter((product) => product.id !== barcodeMatch.id),
+    ];
+  }
+
+  async listCategories(): Promise<Category[]> {
+    const rows = await this.database
+      .get<Category>('categories')
+      .query(Q.where('deleted', false))
+      .fetch();
+    return rows.sort(byName);
+  }
+
+  // Nama kategori duplikat (case-insensitive) diam-diam memakai yang sudah ada.
+  async createCategory(name: string): Promise<CategoryWriteResult> {
+    const trimmed = name.trim();
+    if (trimmed === '' || trimmed.length > 50) {
+      return { status: 'invalid' };
+    }
+    const existing = await this.listCategories();
+    const duplicate = existing.find(
+      (category) => category.name.toLowerCase() === trimmed.toLowerCase(),
+    );
+    if (duplicate) {
+      return { status: 'ok', category: duplicate };
+    }
+
+    const timestamp = this.now();
+    const category = await this.database.write(() =>
+      this.database.get<Category>('categories').create((raw) => {
+        raw.name = trimmed;
+        raw.createdAt = timestamp;
+        raw.updatedAt = timestamp;
+        raw._setRaw('deleted', false);
+        raw._setRaw('last_modified', timestamp);
+      }),
+    );
+    return { status: 'ok', category };
   }
 
   private async findActiveById(productId: string): Promise<Product | null> {

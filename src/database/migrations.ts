@@ -1,4 +1,4 @@
-import { createTable, schemaMigrations } from '@nozbe/watermelondb/Schema/migrations';
+import { addColumns, createTable, schemaMigrations } from '@nozbe/watermelondb/Schema/migrations';
 
 import { withSyncColumns } from './conventions';
 import { DATABASE_SCHEMA_VERSION } from './schema';
@@ -33,6 +33,15 @@ export const migrations = schemaMigrations({
             { name: 'created_at', type: 'number' },
             { name: 'updated_at', type: 'number' },
           ]),
+        }),
+      ],
+    },
+    {
+      toVersion: 3,
+      steps: [
+        addColumns({
+          table: 'products',
+          columns: [{ name: 'custom_unit_label', type: 'string', isOptional: true }],
         }),
       ],
     },

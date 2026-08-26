@@ -2,11 +2,12 @@ import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 import { withSyncColumns } from './conventions';
 
-export const DATABASE_SCHEMA_VERSION = 2;
+export const DATABASE_SCHEMA_VERSION = 3;
 
 // v1 masih pra-rilis: users & settings dimasukkan langsung ke v1 (belum ada
 // instalasi produksi, jadi tidak melanggar aturan append-only migrations).
 // v2: categories & products (T1.1) lewat migrasi append-only.
+// v3: custom_unit_label untuk satuan custom produk (T1.3).
 export const appDatabaseSchema = appSchema({
   version: DATABASE_SCHEMA_VERSION,
   tables: [
@@ -27,6 +28,7 @@ export const appDatabaseSchema = appSchema({
         { name: 'barcode', type: 'string', isIndexed: true, isOptional: true },
         { name: 'category_id', type: 'string', isIndexed: true, isOptional: true },
         { name: 'unit', type: 'string' },
+        { name: 'custom_unit_label', type: 'string', isOptional: true },
         { name: 'cost_price', type: 'number' },
         { name: 'sell_price', type: 'number' },
         { name: 'stock', type: 'number' },

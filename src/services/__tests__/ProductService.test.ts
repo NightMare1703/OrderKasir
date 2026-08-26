@@ -5,7 +5,7 @@ import logger from '@nozbe/watermelondb/utils/common/logger';
 import Category from '../../database/models/category';
 import Product from '../../database/models/product';
 import { appDatabaseSchema } from '../../database/schema';
-import { ProductService } from '../ProductService';
+import { matchesProductName, ProductService } from '../ProductService';
 
 logger.silence();
 
@@ -94,6 +94,21 @@ const seedProduct = async (
   }
   return created;
 };
+
+describe('matchesProductName (fuzzy nama)', () => {
+  it.each([
+    ['Indomie Goreng', 'indomie', true],
+    ['Indomie Goreng', 'INDOMIE GORENG', true],
+    ['Indomie Goreng', 'indm grg', true],
+    ['Teh Pucuk 350ml', 'teh', true],
+    ['Teh Pucuk 350ml', 'pucuk teh', true],
+    ['Indomie Goreng', 'xyz', false],
+    ['Indomie Goreng', 'goreng xyz', false],
+    ['Beras Pandan Wangi 5kg', '', true],
+  ])('%s ~ %s -> %p', (name, query, expected) => {
+    expect(matchesProductName(name, query)).toBe(expected);
+  });
+});
 
 describe('ProductService create', () => {
   it('membuat produk lengkap dengan deleted=false dan last_modified terisi', async () => {

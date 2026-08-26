@@ -10,3 +10,14 @@ export const formatRupiah = (amount: number): string => {
   const prefix = amount < 0 ? `${MINUS_SIGN}Rp ` : 'Rp ';
   return `${prefix}${formatThousands(Math.abs(amount))}`;
 };
+
+// Input keypad user bisa mengandung pemisah ribuan/spasi; simpan sebagai
+// integer rupiah murni. null = kosong/tidak valid.
+export const parseRupiahInput = (raw: string): number | null => {
+  const digits = raw.replace(/\D/g, '');
+  if (digits === '') {
+    return null;
+  }
+  const parsed = Number.parseInt(digits, 10);
+  return Number.isSafeInteger(parsed) ? parsed : null;
+};

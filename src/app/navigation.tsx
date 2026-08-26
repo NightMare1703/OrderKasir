@@ -8,8 +8,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import * as React from 'react';
 
-import { colors } from '../theme';
+import { colors, typography } from '../theme';
 import { LoginScreen } from '../features/auth/screens/LoginScreen';
+import { ProductFormScreen } from '../features/products/screens/ProductFormScreen';
+import { ProductListScreen } from '../features/products/screens/ProductListScreen';
 import { PlaceholderScreen } from './PlaceholderScreen';
 
 export type RootStackParamList = {
@@ -25,16 +27,39 @@ export type MainTabParamList = {
   MoreTab: undefined;
 };
 
+export type ProductsStackParamList = {
+  ProductList: undefined;
+  // productId kosong/undefined = mode tambah produk baru.
+  ProductForm: { productId: string } | undefined;
+};
+
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const MainTabs = createBottomTabNavigator<MainTabParamList>();
+const ProductsStack = createNativeStackNavigator<ProductsStackParamList>();
 
 // Stub layar kosong sesuai SCREENS.md peta navigasi: LoginPin → MainTabs.
 // Diganti layar sungguhan pada task masing-masing.
 const PosTabStub = () => <PlaceholderScreen titleKey="pos.title" />;
 const HistoryTabStub = () => <PlaceholderScreen titleKey="history.title" />;
-const ProductsTabStub = () => <PlaceholderScreen titleKey="products.title" />;
 const DebtsTabStub = () => <PlaceholderScreen titleKey="customers.title" />;
 const MoreTabStub = () => <PlaceholderScreen titleKey="common.more" />;
+
+const ProductsNavigator = () => (
+  <ProductsStack.Navigator
+    screenOptions={{
+      contentStyle: { backgroundColor: colors.black[900] },
+      headerStyle: { backgroundColor: colors.black[900] },
+      headerTintColor: colors.white[50],
+      headerTitleStyle: typography.heading,
+    }}>
+    <ProductsStack.Screen
+      component={ProductListScreen}
+      name="ProductList"
+      options={{ headerBackVisible: false }}
+    />
+    <ProductsStack.Screen component={ProductFormScreen} name="ProductForm" />
+  </ProductsStack.Navigator>
+);
 
 const navigationTheme: Theme = {
   ...DefaultTheme,
@@ -76,7 +101,7 @@ const MainTabsNavigator = () => {
       />
       <MainTabs.Screen
         name="ProductsTab"
-        component={ProductsTabStub}
+        component={ProductsNavigator}
         options={{ tabBarLabel: t('products.title') }}
       />
       <MainTabs.Screen

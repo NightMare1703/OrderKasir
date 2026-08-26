@@ -38,6 +38,15 @@ export default class Product extends Model {
     this._setRaw('unit', value);
   }
 
+  // Label bebas saat unit = 'custom' (mis. "ikat", "resep"); null untuk satuan baku.
+  get customUnitLabel(): string | null {
+    return this._getRaw('custom_unit_label') as string | null;
+  }
+
+  set customUnitLabel(value: string | null) {
+    this._setRaw('custom_unit_label', value);
+  }
+
   // Semua uang = integer rupiah (AGENTS.md §3).
   get costPrice(): number {
     return this._getRaw('cost_price') as number;

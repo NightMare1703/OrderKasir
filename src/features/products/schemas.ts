@@ -18,6 +18,10 @@ const productFieldsObject = z.object({
   ),
   categoryId: z.preprocess(emptyStringToNull, z.string().min(1).nullable()),
   unit: z.enum(PRODUCT_UNITS),
+  // Label satuan bebas hanya relevan saat unit = 'custom'.
+  customUnitLabel: z
+    .preprocess(emptyStringToNull, z.string().trim().min(1).max(20).nullable())
+    .default(null),
   // Uang = integer rupiah, tidak boleh negatif (AGENTS.md §3/§4.6).
   costPrice: z.number().int().min(0),
   sellPrice: z.number().int().min(1),
@@ -30,7 +34,9 @@ export const productCreateSchema = productFieldsObject;
 
 // Update tidak menerima field stok: semua perubahan stok lewat StockService
 // (AGENTS.md §4.2); key asing otomatis di-strip oleh zod.
-export const productUpdateSchema = productFieldsObject.omit({ stock: true });
+export const productUpdateSchema = productFieldsObject
+  .omit({ stock: true })
+  .extend({ isActive: z.boolean().optional() });
 
 export type ProductCreateInput = z.infer<typeof productCreateSchema>;
 export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;

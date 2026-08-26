@@ -1,4 +1,4 @@
-import { formatRupiah } from '../money';
+import { formatRupiah, parseRupiahInput } from '../money';
 
 describe('formatRupiah', () => {
   it.each([
@@ -23,4 +23,21 @@ describe('formatRupiah', () => {
       expect(() => formatRupiah(input)).toThrow();
     },
   );
+});
+
+describe('parseRupiahInput', () => {
+  it.each([
+    ['0', 0],
+    ['5000', 5000],
+    ['12.500', 12500],
+    ['12,500', 12500],
+    ['Rp 12.500', 12500],
+    ['1 250 ', 1250],
+  ])('parseRupiahInput(%j) -> %i', (input, expected) => {
+    expect(parseRupiahInput(input)).toBe(expected);
+  });
+
+  it.each(['', '   ', 'abc', '-', '.'])('returns null for invalid/empty input %j', input => {
+    expect(parseRupiahInput(input)).toBeNull();
+  });
 });
