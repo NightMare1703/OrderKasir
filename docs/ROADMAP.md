@@ -39,7 +39,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   File: `src/database/models/user.ts`, `src/database/models/setting.ts`, update schema/migrations.
   Selesai: model ter-generate benar; CRUD dasar via database layer.
 
-- [ ] **T0.6 — AuthService: PIN, lockout, role** 🧪
+- [x] **T0.6 — AuthService: PIN, lockout, role** 🧪
   Tujuan: hash PIN (bcrypt/scrypt), verifikasi, lockout 5× salah → 30 detik (US-01).
   File: `src/services/AuthService.ts`.
   Selesai: test lockout (counter, reset timer), PIN < 4 digit ditolak, user nonaktif tidak bisa login.

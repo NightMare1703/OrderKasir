@@ -6,7 +6,12 @@
     "comingSoon": "Coming soon"
   },
   "auth": {
-    "title": "PIN Login"
+    "title": "PIN Login",
+    "wrongPin": "Wrong PIN. Attempts left: {{count}}",
+    "locked": "Try again in {{seconds}} seconds",
+    "pinTooShort": "PIN must be at least 4 digits",
+    "userInactive": "Account inactive. Contact the admin",
+    "userNotFound": "Account not found"
   },
   "pos": {
     "title": "Cashier"

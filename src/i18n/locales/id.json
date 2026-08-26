@@ -6,7 +6,12 @@
     "comingSoon": "Segera hadir"
   },
   "auth": {
-    "title": "Login PIN"
+    "title": "Login PIN",
+    "wrongPin": "PIN salah. Sisa percobaan: {{count}}",
+    "locked": "Coba lagi dalam {{seconds}} detik",
+    "pinTooShort": "PIN minimal 4 digit",
+    "userInactive": "Akun tidak aktif. Hubungi admin",
+    "userNotFound": "Akun tidak ditemukan"
   },
   "pos": {
     "title": "Kasir"
