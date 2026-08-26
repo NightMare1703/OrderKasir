@@ -4,6 +4,7 @@ export type ColumnDef = {
   name: string;
   type: ColumnType;
   isIndexed?: boolean;
+  isOptional?: boolean;
 };
 
 export const SYNC_COLUMN_DEFS: ColumnDef[] = [

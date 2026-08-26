@@ -53,7 +53,7 @@ Legend: 🧪 = wajib ada unit test Jest.
 
 ## Fase 1 — Core Kasir
 
-- [ ] **T1.1 — Schema v1 part 2: categories & products**
+- [x] **T1.1 — Schema v1 part 2: categories & products**
   File: `src/database/models/category.ts`, `src/database/models/product.ts`, migrations append-only.
   Selesai: index barcode unique sparse, name, category_id sesuai PRD §7.4.2.
 

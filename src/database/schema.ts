@@ -2,13 +2,41 @@ import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 import { withSyncColumns } from './conventions';
 
-export const DATABASE_SCHEMA_VERSION = 1;
+export const DATABASE_SCHEMA_VERSION = 2;
 
 // v1 masih pra-rilis: users & settings dimasukkan langsung ke v1 (belum ada
 // instalasi produksi, jadi tidak melanggar aturan append-only migrations).
+// v2: categories & products (T1.1) lewat migrasi append-only.
 export const appDatabaseSchema = appSchema({
   version: DATABASE_SCHEMA_VERSION,
   tables: [
+    tableSchema({
+      name: 'categories',
+      columns: withSyncColumns([
+        { name: 'name', type: 'string', isIndexed: true },
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
+      ]),
+    }),
+    // Barcode "unique sparse": WatermelonDB tidak punya constraint UNIQUE di
+    // level schema; keunikan (dan sparsity) ditegakkan di ProductService (T1.2).
+    tableSchema({
+      name: 'products',
+      columns: withSyncColumns([
+        { name: 'name', type: 'string', isIndexed: true },
+        { name: 'barcode', type: 'string', isIndexed: true, isOptional: true },
+        { name: 'category_id', type: 'string', isIndexed: true, isOptional: true },
+        { name: 'unit', type: 'string' },
+        { name: 'cost_price', type: 'number' },
+        { name: 'sell_price', type: 'number' },
+        { name: 'stock', type: 'number' },
+        { name: 'min_stock', type: 'number' },
+        { name: 'is_active', type: 'boolean' },
+        { name: 'photo_path', type: 'string', isOptional: true },
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
+      ]),
+    }),
     tableSchema({
       name: 'users',
       columns: withSyncColumns([
