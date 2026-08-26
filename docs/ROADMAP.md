@@ -29,7 +29,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   File: `src/app/navigation.tsx`, `src/app/providers.tsx`, `src/app/App.tsx`, stub layar kosong.
   Selesai: app boot ke layar stub tanpa error; safe area ditangani.
 
-- [ ] **T0.4 — WatermelonDB setup & konvensi model**
+- [x] **T0.4 — WatermelonDB setup & konvensi model**
   Tujuan: database instance, adapter SQLite, tooling schema/migration.
   File: `src/database/index.ts`, `src/database/schema.ts`, `src/database/migrations.ts`, base conventions (`last_modified`, `deleted` di SEMUA tabel domain).
   Selesai: DB bisa dibuka & query dummy jalan; migration tooling siap.

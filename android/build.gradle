@@ -19,3 +19,17 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+// WatermelonDB memakai BuildConfig.DEBUG di kode Javanya,
+// sedangkan AGP baru tidak lagi generate BuildConfig untuk library module.
+subprojects { subproject ->
+    if (subproject.name == "nozbe_watermelondb") {
+        afterEvaluate {
+            subproject.android {
+                buildFeatures {
+                    buildConfig true
+                }
+            }
+        }
+    }
+}
