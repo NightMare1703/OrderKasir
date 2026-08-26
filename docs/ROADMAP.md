@@ -14,7 +14,7 @@ Legend: 🧪 = wajib ada unit test Jest.
 
 ## Fase 0 — Fondasi
 
-- [ ] **T0.1 — Design tokens** 🧪
+- [x] **T0.1 — Design tokens** 🧪
   Tujuan: implementasi design system AGENTS.md §6 sebagai kode.
   File: `src/theme/colors.ts`, `src/theme/typography.ts`, `src/theme/spacing.ts`, `src/theme/radius.ts`, `src/theme/index.ts`.
   Selesai: semua token warna/tipografi/spacing/radius terdefinisi; util `formatRupiah` di `src/utils/money.ts` (integer → `Rp 125.000`, dot separator, tanpa desimal) + test tabel-driven.
