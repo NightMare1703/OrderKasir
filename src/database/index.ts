@@ -2,6 +2,8 @@ import { Database } from '@nozbe/watermelondb';
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 
 import { migrations } from './migrations';
+import Setting from './models/setting';
+import User from './models/user';
 import { appDatabaseSchema } from './schema';
 
 export {
@@ -9,6 +11,7 @@ export {
   withSyncColumns,
 } from './conventions';
 export type { ColumnDef } from './conventions';
+export type { UserRole } from './models/user';
 
 const adapter = new SQLiteAdapter({
   schema: appDatabaseSchema,
@@ -20,5 +23,5 @@ const adapter = new SQLiteAdapter({
 
 export const database = new Database({
   adapter,
-  modelClasses: [],
+  modelClasses: [Setting, User],
 });

@@ -34,7 +34,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   File: `src/database/index.ts`, `src/database/schema.ts`, `src/database/migrations.ts`, base conventions (`last_modified`, `deleted` di SEMUA tabel domain).
   Selesai: DB bisa dibuka & query dummy jalan; migration tooling siap.
 
-- [ ] **T0.5 — Schema v1 part 1: users & settings**
+- [x] **T0.5 — Schema v1 part 1: users & settings**
   Tujuan: tabel `users` dan `settings` persis PRD §7.4.2.
   File: `src/database/models/user.ts`, `src/database/models/setting.ts`, update schema/migrations.
   Selesai: model ter-generate benar; CRUD dasar via database layer.
