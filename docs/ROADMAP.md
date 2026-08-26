@@ -57,13 +57,14 @@ Legend: 🧪 = wajib ada unit test Jest.
   File: `src/database/models/category.ts`, `src/database/models/product.ts`, migrations append-only.
   Selesai: index barcode unique sparse, name, category_id sesuai PRD §7.4.2.
 
-- [ ] **T1.2 — ProductService CRUD + validasi zod** 🧪
+- [x] **T1.2 — ProductService CRUD + validasi zod** 🧪
   File: `src/services/ProductService.ts`, `src/features/products/schemas.ts`.
   Selesai: create/update/soft-delete; sell_price < cost_price → warning non-blocking; barcode duplikat ditolak; qty/stok tak boleh negatif.
 
 - [ ] **T1.3 — Layar daftar produk & form produk**
   Daftar: pencarian nama fuzzy + scan barcode exact-match prioritas (stub scanner). Form: field lengkap US-10, satuan pcs/pack/kg/liter/custom.
   Selesai: CRUD jalan dari UI; empty state fungsional ("Belum ada produk…" + CTA tambah).
+  Catatan dari T1.2: PRD §7.4.2 belum punya kolom untuk label satuan `custom`; putuskan simpan di mana (rekomendasi: tambah kolom `custom_unit_label` via migrasi v3 append-only) sebelum membangun form.
 
 - [ ] **T1.4 — StockService inti** 🧪
   Tujuan: satu-satunya mutator `products.stock`; selalu menulis `stock_movements` (type, qty signed, stock_before/after, reason, ref).
