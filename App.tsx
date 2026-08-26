@@ -1,45 +1,42 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+// import React from 'react'
+import { useState } from 'react'
+import { Button, Text, View } from 'react-native'
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+const App = () => {
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
-  );
-}
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
+  const [number, setNumber] = useState(0)
 
   return (
     <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
+      <Text style={styles.app}>App</Text>
+      <View style={{ margin: 50 }}>
+        <Button style={{ backgroundColor: 'black', fontSize: 30 }} title='+' onPress={() => setNumber(number + 1)} />
+        <Text
+          style={{
+            marginHorizontal: 20,
+            marginVertical: 20,
+            fontSize: 30,
+            fontWeight: 'bold'
+          }}
+        >{number}</Text>
+        <Button style={{ backgroundColor: 'black', fontSize: 30 }} title='-' onPress={() => setNumber(number - 1)} />
+      </View>
+    </View >
+  )
 }
 
-const styles = StyleSheet.create({
+const styles = {
   container: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-});
+  app: {
+    color: 'red',
+    fontSize: 50,
+    fontWeight: 'bold',
 
-export default App;
+  }
+}
+
+export default App
