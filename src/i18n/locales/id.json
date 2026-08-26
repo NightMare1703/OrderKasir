@@ -7,6 +7,11 @@
   },
   "auth": {
     "title": "Login PIN",
+    "appName": "OrderKasir",
+    "login": "Masuk",
+    "delete": "Hapus",
+    "chooseUser": "Pilih pengguna",
+    "noUsers": "Belum ada pengguna aktif. Tambahkan pengguna terlebih dahulu",
     "wrongPin": "PIN salah. Sisa percobaan: {{count}}",
     "locked": "Coba lagi dalam {{seconds}} detik",
     "pinTooShort": "PIN minimal 4 digit",

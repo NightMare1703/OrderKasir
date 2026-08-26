@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import * as React from 'react';
 
 import { colors } from '../theme';
+import { LoginScreen } from '../features/auth/screens/LoginScreen';
 import { PlaceholderScreen } from './PlaceholderScreen';
 
 export type RootStackParamList = {
@@ -29,7 +30,6 @@ const MainTabs = createBottomTabNavigator<MainTabParamList>();
 
 // Stub layar kosong sesuai SCREENS.md peta navigasi: LoginPin → MainTabs.
 // Diganti layar sungguhan pada task masing-masing.
-const LoginStub = () => <PlaceholderScreen titleKey="auth.title" />;
 const PosTabStub = () => <PlaceholderScreen titleKey="pos.title" />;
 const HistoryTabStub = () => <PlaceholderScreen titleKey="history.title" />;
 const ProductsTabStub = () => <PlaceholderScreen titleKey="products.title" />;
@@ -101,7 +101,7 @@ export const RootNavigator = () => (
         contentStyle: { backgroundColor: colors.black[900] },
         headerShown: false,
       }}>
-      <RootStack.Screen name="Login" component={LoginStub} />
+      <RootStack.Screen name="Login" component={LoginScreen} />
       <RootStack.Screen name="MainTabs" component={MainTabsNavigator} />
     </RootStack.Navigator>
   </NavigationContainer>

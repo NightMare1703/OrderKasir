@@ -1,7 +1,6 @@
 // react-native-screens membutuhkan native module; stub komponen passthrough
 // supaya smoke test render navigator jalan di Jest.
-jest.mock('react-native-screens', () => {
-  const React = require('react');
+jest.mock('react-native-screens', () => {  const React = require('react');
   const { View } = require('react-native');
 
   const passthrough = ({ children }) =>
@@ -46,5 +45,30 @@ jest.mock('react-native-screens', () => {
   return {
     __esModule: true,
     ...mocked,
+  };
+});
+
+// SQLite adapter butuh JSI native; di Jest diganti LokiJS in-memory supaya
+// singleton src/database bisa dipakai smoke test render tanpa device.
+jest.mock('@nozbe/watermelondb/adapters/sqlite', () => {
+  const { default: LokiJSAdapter } = require('@nozbe/watermelondb/adapters/lokijs');
+
+  // LokiJSAdapter logging mengotori output Jest dan menjaga event loop hidup.
+  require('@nozbe/watermelondb/utils/common/logger').default.silence();
+
+  class TestSQLiteAdapter extends LokiJSAdapter {
+    constructor(options) {
+      super({
+        ...options,
+        useWebWorker: false,
+        useIncrementalIndexedDB: false,
+        extraLokiOptions: { autosave: false },
+      });
+    }
+  }
+
+  return {
+    __esModule: true,
+    default: TestSQLiteAdapter,
   };
 });

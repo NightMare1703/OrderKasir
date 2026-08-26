@@ -44,7 +44,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   File: `src/services/AuthService.ts`.
   Selesai: test lockout (counter, reset timer), PIN < 4 digit ditolak, user nonaktif tidak bisa login.
 
-- [ ] **T0.7 — Layar Login PIN**
+- [x] **T0.7 — Layar Login PIN**
   Tujuan: keypad PIN besar (touch target ≥48dp), feedback salah PIN actionable, lockout countdown tampil.
   File: `src/features/auth/screens/LoginScreen.tsx` + komponen lokal.
   Selesai: flow login end-to-end ke stub home; copy via i18n; sesuai gaya AGENTS.md §6.

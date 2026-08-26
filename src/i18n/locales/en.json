@@ -7,6 +7,11 @@
   },
   "auth": {
     "title": "PIN Login",
+    "appName": "OrderKasir",
+    "login": "Sign in",
+    "delete": "Delete",
+    "chooseUser": "Choose user",
+    "noUsers": "No active user yet. Add a user first",
     "wrongPin": "Wrong PIN. Attempts left: {{count}}",
     "locked": "Try again in {{seconds}} seconds",
     "pinTooShort": "PIN must be at least 4 digits",
