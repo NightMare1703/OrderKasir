@@ -1,16 +1,28 @@
 {
   "common": {
     "ok": "OK",
-    "cancel": "Batal"
+    "cancel": "Batal",
+    "more": "Lainnya",
+    "comingSoon": "Segera hadir"
   },
-  "auth": {},
-  "pos": {},
+  "auth": {
+    "title": "Login PIN"
+  },
+  "pos": {
+    "title": "Kasir"
+  },
   "payment": {},
   "success": {},
-  "history": {},
-  "products": {},
+  "history": {
+    "title": "Riwayat"
+  },
+  "products": {
+    "title": "Produk"
+  },
   "inventory": {},
-  "customers": {},
+  "customers": {
+    "title": "Piutang"
+  },
   "shift": {},
   "reports": {},
   "settings": {},

@@ -11,11 +11,15 @@
   },
   "dependencies": {
     "@react-native/new-app-screen": "0.87.0",
+    "@react-navigation/bottom-tabs": "^7.18.17",
+    "@react-navigation/native": "^7.3.17",
+    "@react-navigation/native-stack": "^7.18.9",
     "i18next": "^26.4.0",
     "react": "19.2.3",
     "react-i18next": "^17.0.12",
     "react-native": "0.87.0",
-    "react-native-safe-area-context": "^5.5.2"
+    "react-native-safe-area-context": "^5.5.2",
+    "react-native-screens": "^4.27.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

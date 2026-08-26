@@ -24,7 +24,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   File: `src/i18n/index.ts`, `src/i18n/locales/id.json`, `src/i18n/locales/en.json` (struktur namespace kosong per fitur).
   Selesai: provider i18n terpasang di root app; key contoh (`common.ok`) tampil.
 
-- [ ] **T0.3 — App shell & navigasi**
+- [x] **T0.3 — App shell & navigasi**
   Tujuan: React Navigation v7 terpasang; struktur navigasi login → app (tab/stack sesuai SCREENS.md); background black.900 global.
   File: `src/app/navigation.tsx`, `src/app/providers.tsx`, `src/app/App.tsx`, stub layar kosong.
   Selesai: app boot ke layar stub tanpa error; safe area ditangani.

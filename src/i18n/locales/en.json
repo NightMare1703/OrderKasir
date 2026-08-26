@@ -1,16 +1,28 @@
 {
   "common": {
     "ok": "OK",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "more": "More",
+    "comingSoon": "Coming soon"
   },
-  "auth": {},
-  "pos": {},
+  "auth": {
+    "title": "PIN Login"
+  },
+  "pos": {
+    "title": "Cashier"
+  },
   "payment": {},
   "success": {},
-  "history": {},
-  "products": {},
+  "history": {
+    "title": "History"
+  },
+  "products": {
+    "title": "Products"
+  },
   "inventory": {},
-  "customers": {},
+  "customers": {
+    "title": "Debts"
+  },
   "shift": {},
   "reports": {},
   "settings": {},
