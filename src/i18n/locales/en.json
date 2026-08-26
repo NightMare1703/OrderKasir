@@ -1,0 +1,18 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel"
+  },
+  "auth": {},
+  "pos": {},
+  "payment": {},
+  "success": {},
+  "history": {},
+  "products": {},
+  "inventory": {},
+  "customers": {},
+  "shift": {},
+  "reports": {},
+  "settings": {},
+  "errors": {}
+}

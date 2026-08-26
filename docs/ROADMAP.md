@@ -19,7 +19,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   File: `src/theme/colors.ts`, `src/theme/typography.ts`, `src/theme/spacing.ts`, `src/theme/radius.ts`, `src/theme/index.ts`.
   Selesai: semua token warna/tipografi/spacing/radius terdefinisi; util `formatRupiah` di `src/utils/money.ts` (integer → `Rp 125.000`, dot separator, tanpa desimal) + test tabel-driven.
 
-- [ ] **T0.2 — i18n scaffolding**
+- [x] **T0.2 — i18n scaffolding**
   Tujuan: i18next + react-i18next terpasang; bahasa default Indonesia, mengikuti setting app bukan OS.
   File: `src/i18n/index.ts`, `src/i18n/locales/id.json`, `src/i18n/locales/en.json` (struktur namespace kosong per fitur).
   Selesai: provider i18n terpasang di root app; key contoh (`common.ok`) tampil.
