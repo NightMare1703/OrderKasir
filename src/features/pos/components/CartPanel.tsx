@@ -6,7 +6,11 @@ import { colors, radius, spacing, typography } from '../../../theme';
 import { formatRupiah } from '../../../utils/money';
 import { FlashList } from '@shopify/flash-list';
 
-export const CartPanel = () => {
+type Props = {
+  onPay: () => void;
+};
+
+export const CartPanel = ({ onPay }: Props) => {
   const { t } = useTranslation();
   const cart = useCartStore();
   const items = cart.items;
@@ -57,7 +61,7 @@ export const CartPanel = () => {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.payButton}>
+      <TouchableOpacity onPress={onPay} style={styles.payButton}>
         <Text style={styles.payButtonText}>{t('pos.cartPay')}</Text>
       </TouchableOpacity>
     </View>

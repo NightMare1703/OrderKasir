@@ -87,9 +87,10 @@ Legend: 🧪 = wajib ada unit test Jest.
   File: `src/services/CheckoutService.ts`, `src/utils/invoice.ts` (format `INV-YYYYMMDD-XXXX`), model `transaction`, `transaction-item`, `payment`.
   Selesai: test atomicity — gagal di tengah = rollback SEMUA (transaksi+items+payments+stock movements+stok); snapshot name/unit/price tersimpan; invoice unique.
 
-- [ ] **T1.9 — Pembayaran tunai** 
+- [x] **T1.9 — Pembayaran tunai** 
   Keypad numerik besar + shortcut uang pas/20rb/50rb/100rb; kembalian display-size green.
   Selesai: validasi uang kurang diblokir dengan pesan actionable; kembalian benar (test).
+  Catatan: checkout tunai menyimpan transaksi via CheckoutService (single payment `cash`); `userId` dari session store (diisi saat login), `shiftId` masih placeholder `shift-1` sampai ShiftService (T3.1) + gate BukaShift (T3.2). Layar sukses menyusul T1.11.
 
 - [ ] **T1.10 — Non-tunai manual, split payment, kas bon entry** 🧪
   QRIS/debit/transfer dicatat manual + reference opsional; split max 3 metode (sum = total); pilih pelanggan / buat inline untuk bon.

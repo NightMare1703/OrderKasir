@@ -14,12 +14,23 @@ import {
 import { database } from '../../../database';
 import type Category from '../../../database/models/category';
 import type Product from '../../../database/models/product';
+import { CheckoutService } from '../../../services/CheckoutService';
 import { ProductService, matchesProductName } from '../../../services/ProductService';
 import { colors, radius, spacing, typography } from '../../../theme';
 import { formatRupiah } from '../../../utils/money';
-import { useCartStore } from '../cartStore';
+import { useSessionStore } from '../../auth/sessionStore';
+import {
+  calculateCartTotals,
+  calculateItemDiscountAmount,
+  useCartStore,
+} from '../cartStore';
 import { BarcodeScannerStubSheet } from '../../products/components/BarcodeScannerStubSheet';
 import { CartPanel } from '../components/CartPanel';
+import { CashPaymentSheet } from '../components/CashPaymentSheet';
+
+// T3.1 (ShiftService) akan menyediakan id shift aktif; sampai gate BukaShift
+// (T3.2) ada, checkout memakai placeholder yang sama dengan skema uji T1.8.
+const SHIFT_PLACEHOLDER_ID = 'shift-1';
 
 type CategoryTabProps = {
   categories: Category[];
@@ -190,14 +201,23 @@ export const PosScreen = () => {
   const navigation = useNavigation();
 
   const productService = React.useMemo(() => new ProductService(database), []);
+  const checkoutService = React.useMemo(() => new CheckoutService(database), []);
 
   const [products, setProducts] = React.useState<Product[] | null>(null);
   const [categories, setCategories] = React.useState<Category[]>([]);
   const [query, setQuery] = React.useState('');
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null);
   const [scanVisible, setScanVisible] = React.useState(false);
+  const [paymentVisible, setPaymentVisible] = React.useState(false);
 
   const addItem = useCartStore((state) => state.addItem);
+  const cartItems = useCartStore((state) => state.items);
+  const transactionDiscount = useCartStore((state) => state.transactionDiscount);
+
+  const cartTotal = React.useMemo(
+    () => calculateCartTotals(cartItems, transactionDiscount).total,
+    [cartItems, transactionDiscount],
+  );
 
   const load = React.useCallback(async () => {
     const [allProducts, allCategories] = await Promise.all([
@@ -303,6 +323,50 @@ export const PosScreen = () => {
     setScanVisible(true);
   }, []);
 
+  const handlePayPress = React.useCallback(() => {
+    setPaymentVisible(true);
+  }, []);
+
+  const handleClosePayment = React.useCallback(() => {
+    setPaymentVisible(false);
+  }, []);
+
+  const handleConfirm = React.useCallback(
+    async (received: number): Promise<boolean> => {
+      const currentUserId = useSessionStore.getState().currentUserId;
+      if (currentUserId === null) {
+        return false;
+      }
+
+      const cart = useCartStore.getState();
+      const totals = calculateCartTotals(cart.items, cart.transactionDiscount);
+      const items = cart.items.map((item) => ({
+        productId: item.productId,
+        qty: item.qty,
+        unitPrice: item.unitPrice,
+        discount: calculateItemDiscountAmount(item),
+      }));
+
+      const result = await checkoutService.checkout({
+        shiftId: SHIFT_PLACEHOLDER_ID,
+        userId: currentUserId,
+        items,
+        transactionDiscount: totals.transactionDiscountAmount,
+        tax: 0,
+        payments: [{ method: 'cash', amount: received }],
+        status: 'paid',
+      });
+
+      if (result.status === 'ok') {
+        useCartStore.getState().clearCart();
+        setPaymentVisible(false);
+        return true;
+      }
+      return false;
+    },
+    [checkoutService],
+  );
+
   const handleQueryChange = React.useCallback((value: string) => {
     setQuery(value);
   }, []);
@@ -356,13 +420,20 @@ export const PosScreen = () => {
             showsVerticalScrollIndicator={false}
           />
         </View>
-        <CartPanel />
+        <CartPanel onPay={handlePayPress} />
       </View>
 
       <BarcodeScannerStubSheet
         visible={scanVisible}
         onCancel={handleScanCancel}
         onSubmit={handleScanSubmit}
+      />
+
+      <CashPaymentSheet
+        total={cartTotal}
+        visible={paymentVisible}
+        onClose={handleClosePayment}
+        onConfirm={handleConfirm}
       />
     </View>
   );

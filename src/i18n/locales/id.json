@@ -10,7 +10,6 @@
     "title": "Login PIN",
     "appName": "OrderKasir",
     "login": "Masuk",
-    "delete": "Hapus",
     "chooseUser": "Pilih pengguna",
     "noUsers": "Belum ada pengguna aktif. Tambahkan pengguna terlebih dahulu",
     "wrongPin": "PIN salah. Sisa percobaan: {{count}}",
@@ -36,7 +35,18 @@
     "cartTotal": "Total bayar",
     "cartPay": "Bayar"
   },
-  "payment": {},
+  "payment": {
+    "title": "Pembayaran",
+    "totalDue": "Total bayar",
+    "received": "Uang diterima",
+    "change": "Kembalian",
+    "insufficient": "Kurang {{amount}}",
+    "exact": "Uang pas",
+    "shortcut20": "20rb",
+    "shortcut50": "50rb",
+    "shortcut100": "100rb",
+    "pay": "Bayar"
+  },
   "success": {},
   "history": {
     "title": "Riwayat"
@@ -92,5 +102,7 @@
   "shift": {},
   "reports": {},
   "settings": {},
-  "errors": {}
+  "errors": {
+    "checkoutFailed": "Transaksi gagal disimpan. Coba lagi"
+  }
 }

@@ -22,8 +22,9 @@ import {
 } from '../../../services/AuthService';
 import { colors, radius, spacing, typography } from '../../../theme';
 import type { RootStackParamList } from '../../../app/navigation';
+import { NumericKeypad } from '../../../components/NumericKeypad';
 import { MAX_PIN_DIGITS, PinDots } from '../components/PinDots';
-import { NumericKeypad } from '../components/NumericKeypad';
+import { useSessionStore } from '../sessionStore';
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -155,6 +156,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
         const result = await authService.login(selectedUserId, candidatePin);
         switch (result.status) {
           case 'ok':
+            useSessionStore.getState().setCurrentUser(selectedUserId);
             navigation.replace('MainTabs');
             break;
           case 'invalid_pin':

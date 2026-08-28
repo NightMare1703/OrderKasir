@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import * as React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { colors, radius, spacing, typography } from '../../../theme';
+import { colors, radius, spacing, typography } from '../theme';
 
 const KEYS: (string | null)[][] = [
   ['1', '2', '3'],
@@ -19,8 +19,7 @@ type Props = {
   disabled?: boolean;
 };
 
-// Keypad numerik lokal auth; diekstrak ke components/ saat pembayaran
-// membutuhkan pemakaian kedua (AGENTS.md §5).
+// Keypad numerik bersama (login PIN + pembayaran tunai).
 export const NumericKeypad = ({ onDigit, onDelete, disabled = false }: Props) => {
   const { t } = useTranslation();
 
@@ -51,9 +50,7 @@ export const NumericKeypad = ({ onDigit, onDelete, disabled = false }: Props) =>
             return (
               <TouchableOpacity
                 key={keyIndex}
-                accessibilityLabel={
-                  isDelete ? t('auth.delete') : undefined
-                }
+                accessibilityLabel={isDelete ? t('common.delete') : undefined}
                 disabled={disabled}
                 onPress={isDelete ? pressDelete : pressDigit(key)}
                 style={[styles.key, disabled && styles.keyDisabled]}>

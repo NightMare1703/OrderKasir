@@ -3,8 +3,8 @@ import { TouchableOpacity, View } from 'react-native';
 import TestRenderer, { act } from 'react-test-renderer';
 
 import '../../../i18n';
+import { NumericKeypad } from '../../../components/NumericKeypad';
 import { MAX_PIN_DIGITS, PinDots } from '../components/PinDots';
-import { NumericKeypad } from '../components/NumericKeypad';
 
 const flush = async () => {
   await act(async () => {

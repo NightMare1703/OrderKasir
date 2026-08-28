@@ -10,7 +10,6 @@
     "title": "PIN Login",
     "appName": "OrderKasir",
     "login": "Sign in",
-    "delete": "Delete",
     "chooseUser": "Choose user",
     "noUsers": "No active user yet. Add a user first",
     "wrongPin": "Wrong PIN. Attempts left: {{count}}",
@@ -32,7 +31,18 @@
     "lowStock": "Low stock",
     "outOfStock": "Out of stock"
   },
-  "payment": {},
+  "payment": {
+    "title": "Payment",
+    "totalDue": "Total due",
+    "received": "Cash received",
+    "change": "Change",
+    "insufficient": "Short {{amount}}",
+    "exact": "Exact cash",
+    "shortcut20": "20k",
+    "shortcut50": "50k",
+    "shortcut100": "100k",
+    "pay": "Pay"
+  },
   "success": {},
   "history": {
     "title": "History"
@@ -88,5 +98,7 @@
   "shift": {},
   "reports": {},
   "settings": {},
-  "errors": {}
+  "errors": {
+    "checkoutFailed": "Transaction failed to save. Try again"
+  }
 }
