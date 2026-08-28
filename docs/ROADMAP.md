@@ -83,7 +83,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   Panel kanan / bottom sheet black.700; ladder subtotal → diskon → pajak (configurable, default off) → total bayar.
   Selesai: semua angka integer rupiah diformat via money util; edit qty & diskon dari panel.
 
-- [ ] **T1.8 — CheckoutService atomic** 🧪 (paling kritis)
+- [x] **T1.8 — CheckoutService atomic** 🧪 (paling kritis)
   File: `src/services/CheckoutService.ts`, `src/utils/invoice.ts` (format `INV-YYYYMMDD-XXXX`), model `transaction`, `transaction-item`, `payment`.
   Selesai: test atomicity — gagal di tengah = rollback SEMUA (transaksi+items+payments+stock movements+stok); snapshot name/unit/price tersimpan; invoice unique.
 

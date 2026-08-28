@@ -3,9 +3,12 @@ import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 
 import { migrations } from './migrations';
 import Category from './models/category';
+import Payment from './models/payment';
 import Product from './models/product';
 import Setting from './models/setting';
 import StockMovement from './models/stock-movement';
+import Transaction from './models/transaction';
+import TransactionItem from './models/transaction-item';
 import User from './models/user';
 import { appDatabaseSchema } from './schema';
 
@@ -17,6 +20,8 @@ export type { ColumnDef } from './conventions';
 export type { UserRole } from './models/user';
 export type { ProductUnit } from './models/product';
 export type { StockMovementType } from './models/stock-movement';
+export type { TransactionStatus } from './models/transaction';
+export type { PaymentMethod } from './models/payment';
 
 const adapter = new SQLiteAdapter({
   schema: appDatabaseSchema,
@@ -28,5 +33,14 @@ const adapter = new SQLiteAdapter({
 
 export const database = new Database({
   adapter,
-  modelClasses: [Category, Product, Setting, StockMovement, User],
+  modelClasses: [
+    Category,
+    Payment,
+    Product,
+    Setting,
+    StockMovement,
+    Transaction,
+    TransactionItem,
+    User,
+  ],
 });
