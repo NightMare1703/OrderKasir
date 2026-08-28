@@ -20,7 +20,17 @@
     "userNotFound": "Account not found"
   },
   "pos": {
-    "title": "Cashier"
+    "title": "Cashier",
+    "searchPlaceholder": "Search name or barcode",
+    "scan": "Scan",
+    "categoryAll": "All",
+    "searchEmpty": "No products match \"{{query}}\"",
+    "emptyTitle": "No products yet",
+    "emptyHint": "Add your first product to start selling",
+    "emptyCta": "Add first product",
+    "cartBadge": "Cart · {{count}}",
+    "lowStock": "Low stock",
+    "outOfStock": "Out of stock"
   },
   "payment": {},
   "success": {},

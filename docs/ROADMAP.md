@@ -75,7 +75,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   File: `src/features/pos/cartStore.ts`.
   Selesai: add/edit qty/hapus/item note; diskon item (Rp/%); diskon transaksi (Rp/%); stacking dihitung benar (test tabel-driven termasuk edge: diskon > subtotal diblokir, cart kosong).
 
-- [ ] **T1.6 — POS catalog screen**
+- [x] **T1.6 — POS catalog screen**
   Grid produk dominan (~65% lebar), tab kategori, pencarian; tile ≥88dp; FlashList; tanpa inline closure di hot path.
   Selesai: tap produk masuk keranjang <200ms feel; badge keranjang bump animation.
 

@@ -48,6 +48,13 @@ jest.mock('react-native-screens', () => {  const React = require('react');
   };
 });
 
+jest.mock('@shopify/flash-list', () => {
+  const React = require('react');
+  const { FlatList } = require('react-native');
+  const FlashList = React.forwardRef((props, ref) => React.createElement(FlatList, { ...props, ref }));
+  return { FlashList };
+});
+
 // SQLite adapter butuh JSI native; di Jest diganti LokiJS in-memory supaya
 // singleton src/database bisa dipakai smoke test render tanpa device.
 jest.mock('@nozbe/watermelondb/adapters/sqlite', () => {

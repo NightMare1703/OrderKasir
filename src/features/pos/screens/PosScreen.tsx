@@ -1,0 +1,618 @@
+import { FlashList } from '@shopify/flash-list';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import * as React from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  Animated,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+import { database } from '../../../database';
+import type Category from '../../../database/models/category';
+import type Product from '../../../database/models/product';
+import { ProductService, matchesProductName } from '../../../services/ProductService';
+import { colors, radius, spacing, typography } from '../../../theme';
+import { formatRupiah } from '../../../utils/money';
+import { useCartStore } from '../cartStore';
+import { BarcodeScannerStubSheet } from '../../products/components/BarcodeScannerStubSheet';
+
+type CategoryTabProps = {
+  categories: Category[];
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+};
+
+const CategoryTabs = React.memo(({ categories, selectedId, onSelect }: CategoryTabProps) => {
+  const { t } = useTranslation();
+
+  const handleAllPress = React.useCallback(() => {
+    onSelect(null);
+  }, [onSelect]);
+
+  const handleCategoryPress = React.useCallback(
+    (categoryId: string) => {
+      onSelect(categoryId);
+    },
+    [onSelect],
+  );
+
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.tabsContent}
+      style={styles.tabsContainer}>
+      <CategoryChip
+        active={selectedId === null}
+        label={t('pos.categoryAll')}
+        onPress={handleAllPress}
+      />
+      {categories.map((category) => (
+        <CategoryChipWrapper
+          key={category.id}
+          category={category}
+          selectedId={selectedId}
+          onSelect={handleCategoryPress}
+        />
+      ))}
+    </ScrollView>
+  );
+});
+CategoryTabs.displayName = 'CategoryTabs';
+
+type CategoryChipProps = {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+};
+
+const CategoryChip = React.memo(({ label, active, onPress }: CategoryChipProps) => (
+  <TouchableOpacity
+    accessibilityRole="button"
+    onPress={onPress}
+    style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}>
+    <Text style={[styles.chipText, active ? styles.chipTextActive : styles.chipTextInactive]}>
+      {label}
+    </Text>
+  </TouchableOpacity>
+));
+CategoryChip.displayName = 'CategoryChip';
+
+type CategoryChipWrapperProps = {
+  category: Category;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+};
+
+const CategoryChipWrapper = React.memo(({ category, selectedId, onSelect }: CategoryChipWrapperProps) => {
+  const handlePress = React.useCallback(() => {
+    onSelect(category.id);
+  }, [category.id, onSelect]);
+
+  return (
+    <CategoryChip
+      active={selectedId === category.id}
+      label={category.name}
+      onPress={handlePress}
+    />
+  );
+});
+CategoryChipWrapper.displayName = 'CategoryChipWrapper';
+
+// Tile ≥88dp (AGENTS.md §6.3): minHeight 96 + padding; performa murah —
+// React.memo + useCallback di induk agar FlashList tidak buat closure per-item.
+type TileProps = {
+  product: Product;
+  onPress: (product: Product) => void;
+};
+
+const ProductTile = React.memo(({ product, onPress }: TileProps) => {
+  const lowStock = product.stock <= product.minStock;
+  const outOfStock = product.stock <= 0;
+  const unitLabel =
+    product.unit === 'custom' && product.customUnitLabel ? product.customUnitLabel : product.unit;
+
+  const handlePress = React.useCallback(() => {
+    onPress(product);
+  }, [onPress, product]);
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={handlePress}
+      style={[styles.tile, outOfStock && styles.tileOutOfStock]}>
+      <View style={styles.tileTop}>
+        <Text numberOfLines={2} style={styles.tileName}>
+          {product.name}
+        </Text>
+        {lowStock ? (
+          <View style={styles.lowStockBadge}>
+            <Text style={styles.lowStockBadgeText}>!</Text>
+          </View>
+        ) : null}
+      </View>
+      <Text numberOfLines={1} style={styles.tileUnit}>
+        {unitLabel}
+      </Text>
+      <Text numberOfLines={1} style={styles.tilePrice}>
+        {formatRupiah(product.sellPrice)}
+      </Text>
+      <Text style={[styles.tileStock, lowStock && styles.tileStockLow]}>
+        {product.stock <= 0 ? 'Habis' : `Stok ${product.stock}`}
+      </Text>
+    </TouchableOpacity>
+  );
+});
+ProductTile.displayName = 'ProductTile';
+
+type EmptyProps = {
+  query: string;
+  hasProducts: boolean;
+  onAddProduct: () => void;
+  onClearSearch: () => void;
+};
+
+const PosEmptyState = React.memo(({ query, hasProducts, onAddProduct, onClearSearch }: EmptyProps) => {
+  const { t } = useTranslation();
+  const trimmed = query.trim();
+  const isSearchEmpty = trimmed !== '' && hasProducts;
+
+  if (isSearchEmpty) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyTitle}>{t('pos.searchEmpty', { query: trimmed })}</Text>
+        <TouchableOpacity onPress={onClearSearch} style={styles.emptyGhostButton}>
+          <Text style={styles.emptyGhostButtonText}>{t('common.cancel')}</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyTitle}>{t('pos.emptyTitle')}</Text>
+      <Text style={styles.emptyHint}>{t('pos.emptyHint')}</Text>
+      <TouchableOpacity onPress={onAddProduct} style={styles.emptyCta}>
+        <Text style={styles.emptyCtaText}>{t('pos.emptyCta')}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+});
+PosEmptyState.displayName = 'PosEmptyState';
+
+export const PosScreen = () => {
+  const { t } = useTranslation();
+  const navigation = useNavigation();
+
+  const productService = React.useMemo(() => new ProductService(database), []);
+
+  const [products, setProducts] = React.useState<Product[] | null>(null);
+  const [categories, setCategories] = React.useState<Category[]>([]);
+  const [query, setQuery] = React.useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null);
+  const [scanVisible, setScanVisible] = React.useState(false);
+
+  const addItem = useCartStore((state) => state.addItem);
+  const itemCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.qty, 0));
+
+  const bumpAnim = React.useRef(new Animated.Value(1)).current;
+  const prevCountRef = React.useRef(itemCount);
+
+  React.useEffect(() => {
+    if (itemCount > prevCountRef.current) {
+      Animated.sequence([
+        Animated.timing(bumpAnim, {
+          toValue: 1.15,
+          duration: 120,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bumpAnim, {
+          toValue: 1,
+          duration: 130,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+    prevCountRef.current = itemCount;
+  }, [itemCount, bumpAnim]);
+
+  const load = React.useCallback(async () => {
+    const [allProducts, allCategories] = await Promise.all([
+      productService.listProducts(),
+      productService.listCategories(),
+    ]);
+    setProducts(allProducts);
+    setCategories(allCategories);
+  }, [productService]);
+
+  React.useEffect(() => {
+    load();
+  }, [load]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      load();
+    }, [load]),
+  );
+
+  const displayedProducts = React.useMemo(() => {
+    if (products === null) {
+      return [];
+    }
+    const active = products.filter((product) => product.isActive);
+    const byCategory =
+      selectedCategoryId === null
+        ? active
+        : active.filter((product) => product.categoryId === selectedCategoryId);
+
+    const trimmed = query.trim();
+    if (trimmed === '') {
+      return byCategory;
+    }
+
+    const barcodeMatch = byCategory.find((product) => product.barcode === trimmed);
+    const nameMatches = byCategory.filter((product) => matchesProductName(product.name, trimmed));
+
+    if (barcodeMatch) {
+      const withoutDuplicate = nameMatches.filter((product) => product.id !== barcodeMatch.id);
+      return [barcodeMatch, ...withoutDuplicate];
+    }
+    return nameMatches;
+  }, [products, selectedCategoryId, query]);
+
+  const hasAnyProduct = React.useMemo(
+    () => (products ?? []).some((product) => product.isActive),
+    [products],
+  );
+
+  const handleSelectCategory = React.useCallback((id: string | null) => {
+    setSelectedCategoryId(id);
+  }, []);
+
+  const handleProductPress = React.useCallback(
+    (product: Product) => {
+      addItem(
+        {
+          id: product.id,
+          name: product.name,
+          unit: product.unit,
+          customUnitLabel: product.customUnitLabel,
+          sellPrice: product.sellPrice,
+        },
+        1,
+      );
+    },
+    [addItem],
+  );
+
+  const handleClearSearch = React.useCallback(() => {
+    setQuery('');
+  }, []);
+
+  const handleAddProduct = React.useCallback(() => {
+    const parent = navigation.getParent();
+    if (parent) {
+      // Navigasi antar-tab: dari Kasir ke stack Produk → Form.
+      // Casting any agar tidak terkunci tipe MainTabParamList (T1.3 memakai
+      // struktur ProductsStack: ProductList / ProductForm).
+      (navigation as unknown as { navigate: (name: string, params?: unknown) => void }).navigate(
+        'ProductsTab',
+        { screen: 'ProductForm' } as unknown as undefined,
+      );
+    } else {
+      (navigation as unknown as { navigate: (name: string) => void }).navigate('ProductForm' as never);
+    }
+  }, [navigation]);
+
+  const handleScanSubmit = React.useCallback(
+    (barcode: string) => {
+      setScanVisible(false);
+      setQuery(barcode);
+    },
+    [],
+  );
+
+  const handleScanCancel = React.useCallback(() => {
+    setScanVisible(false);
+  }, []);
+
+  const handleOpenScan = React.useCallback(() => {
+    setScanVisible(true);
+  }, []);
+
+  const handleQueryChange = React.useCallback((value: string) => {
+    setQuery(value);
+  }, []);
+
+  const renderItem = React.useCallback(
+    ({ item }: { item: Product }) => <ProductTile product={item} onPress={handleProductPress} />,
+    [handleProductPress],
+  );
+
+  const keyExtractor = React.useCallback((item: Product) => item.id, []);
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.searchRow}>
+        <TextInput
+          onChangeText={handleQueryChange}
+          placeholder={t('pos.searchPlaceholder')}
+          placeholderTextColor={colors.white[150]}
+          style={styles.searchInput}
+          value={query}
+        />
+        <TouchableOpacity onPress={handleOpenScan} style={styles.scanButton}>
+          <Text style={styles.scanButtonText}>{t('pos.scan')}</Text>
+        </TouchableOpacity>
+      </View>
+
+      <CategoryTabs
+        categories={categories}
+        selectedId={selectedCategoryId}
+        onSelect={handleSelectCategory}
+      />
+
+      <View style={styles.gridWrap}>
+        <FlashList
+          data={displayedProducts}
+          keyExtractor={keyExtractor}
+          numColumns={2}
+          renderItem={renderItem}
+          contentContainerStyle={styles.gridContent}
+          ListEmptyComponent={
+            products === null ? null : (
+              <PosEmptyState
+                query={query}
+                hasProducts={hasAnyProduct}
+                onAddProduct={handleAddProduct}
+                onClearSearch={handleClearSearch}
+              />
+            )
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
+
+      <Animated.View style={[styles.fabWrap, { transform: [{ scale: bumpAnim }] }]}>
+        <View style={styles.fabBadge}>
+          <Text style={styles.fabBadgeText}>{itemCount}</Text>
+        </View>
+        <View style={styles.fabLabel}>
+          <Text style={styles.fabLabelText}>{t('pos.cartBadge', { count: itemCount })}</Text>
+        </View>
+      </Animated.View>
+
+      <BarcodeScannerStubSheet
+        visible={scanVisible}
+        onCancel={handleScanCancel}
+        onSubmit={handleScanSubmit}
+      />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: colors.black[900],
+    flex: 1,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    padding: spacing.lg,
+    paddingBottom: spacing.sm,
+  },
+  searchInput: {
+    ...typography.body,
+    backgroundColor: colors.black[700],
+    borderColor: colors.black[600],
+    borderRadius: radius.input,
+    borderWidth: 1,
+    color: colors.white[50],
+    flex: 1,
+    minHeight: 48,
+    paddingHorizontal: spacing.lg,
+  },
+  scanButton: {
+    alignItems: 'center',
+    borderColor: colors.black[600],
+    borderRadius: radius.input,
+    borderWidth: 1,
+    justifyContent: 'center',
+    marginLeft: spacing.sm,
+    minHeight: 48,
+    paddingHorizontal: spacing.lg,
+  },
+  scanButtonText: {
+    ...typography.body,
+    color: colors.white[300],
+  },
+  tabsContainer: {
+    flexGrow: 0,
+    maxHeight: 56,
+  },
+  tabsContent: {
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  chip: {
+    borderRadius: radius.pill,
+    minHeight: 32,
+    paddingHorizontal: spacing.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  chipActive: {
+    backgroundColor: colors.orange[500],
+    borderColor: colors.orange[500],
+  },
+  chipInactive: {
+    backgroundColor: colors.black[700],
+    borderColor: colors.black[600],
+  },
+  chipText: {
+    ...typography.caption,
+  },
+  chipTextActive: {
+    color: colors.black[900],
+    fontWeight: '600',
+  },
+  chipTextInactive: {
+    color: colors.white[300],
+  },
+  gridWrap: {
+    flex: 1,
+    minHeight: 200,
+  },
+  gridContent: {
+    padding: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xxl * 2,
+  },
+  tile: {
+    backgroundColor: colors.black[800],
+    borderColor: colors.black[600],
+    borderRadius: radius.card,
+    borderWidth: 1,
+    flex: 1,
+    margin: spacing.sm / 2,
+    minHeight: 96,
+    padding: spacing.md,
+    justifyContent: 'space-between',
+  },
+  tileOutOfStock: {
+    opacity: 0.5,
+  },
+  tileTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
+  tileName: {
+    ...typography.body,
+    color: colors.white[50],
+    flex: 1,
+  },
+  lowStockBadge: {
+    backgroundColor: colors.yellow[400],
+    borderRadius: radius.pill,
+    height: 18,
+    width: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lowStockBadgeText: {
+    ...typography.micro,
+    color: colors.black[900],
+    fontWeight: '700',
+    fontSize: 11,
+    lineHeight: 11,
+  },
+  tileUnit: {
+    ...typography.caption,
+    color: colors.white[150],
+    marginTop: spacing.xs,
+  },
+  tilePrice: {
+    ...typography.heading,
+    color: colors.white[50],
+    fontSize: 15,
+    marginTop: spacing.xs,
+  },
+  tileStock: {
+    ...typography.caption,
+    color: colors.white[300],
+    marginTop: spacing.xs,
+  },
+  tileStockLow: {
+    color: colors.yellow[400],
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xxl,
+  },
+  emptyTitle: {
+    ...typography.heading,
+    color: colors.white[50],
+    textAlign: 'center',
+  },
+  emptyHint: {
+    ...typography.body,
+    color: colors.white[300],
+    marginTop: spacing.sm,
+    textAlign: 'center',
+  },
+  emptyCta: {
+    alignItems: 'center',
+    backgroundColor: colors.orange[500],
+    borderRadius: radius.button,
+    justifyContent: 'center',
+    minHeight: 48,
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.xl,
+  },
+  emptyCtaText: {
+    ...typography.heading,
+    color: colors.black[900],
+  },
+  emptyGhostButton: {
+    alignItems: 'center',
+    borderColor: colors.black[600],
+    borderRadius: radius.button,
+    borderWidth: 1,
+    justifyContent: 'center',
+    minHeight: 48,
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.xl,
+  },
+  emptyGhostButtonText: {
+    ...typography.heading,
+    color: colors.white[300],
+  },
+  fabWrap: {
+    position: 'absolute',
+    bottom: spacing.xl,
+    right: spacing.xl,
+    alignItems: 'center',
+    flexDirection: 'row',
+    backgroundColor: colors.black[700],
+    borderColor: colors.black[600],
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    paddingLeft: spacing.sm,
+    paddingRight: spacing.md,
+    height: 48,
+    gap: spacing.sm,
+  },
+  fabBadge: {
+    backgroundColor: colors.orange[500],
+    borderRadius: radius.pill,
+    minWidth: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xs,
+  },
+  fabBadgeText: {
+    ...typography.heading,
+    color: colors.black[900],
+    fontSize: 14,
+  },
+  fabLabel: {
+    justifyContent: 'center',
+  },
+  fabLabelText: {
+    ...typography.caption,
+    color: colors.white[50],
+    fontWeight: '600',
+  },
+});

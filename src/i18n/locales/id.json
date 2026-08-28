@@ -20,7 +20,17 @@
     "userNotFound": "Akun tidak ditemukan"
   },
   "pos": {
-    "title": "Kasir"
+    "title": "Kasir",
+    "searchPlaceholder": "Cari nama atau barcode",
+    "scan": "Scan",
+    "categoryAll": "Semua",
+    "searchEmpty": "Tidak ada produk cocok \"{{query}}\"",
+    "emptyTitle": "Belum ada produk",
+    "emptyHint": "Tambahkan produk pertama untuk mulai jualan",
+    "emptyCta": "Tambah produk pertama",
+    "cartBadge": "Keranjang · {{count}}",
+    "lowStock": "Stok menipis",
+    "outOfStock": "Habis"
   },
   "payment": {},
   "success": {},

@@ -10,6 +10,7 @@ import * as React from 'react';
 
 import { colors, typography } from '../theme';
 import { LoginScreen } from '../features/auth/screens/LoginScreen';
+import { PosScreen } from '../features/pos/screens/PosScreen';
 import { ProductFormScreen } from '../features/products/screens/ProductFormScreen';
 import { ProductListScreen } from '../features/products/screens/ProductListScreen';
 import { PlaceholderScreen } from './PlaceholderScreen';
@@ -39,7 +40,6 @@ const ProductsStack = createNativeStackNavigator<ProductsStackParamList>();
 
 // Stub layar kosong sesuai SCREENS.md peta navigasi: LoginPin → MainTabs.
 // Diganti layar sungguhan pada task masing-masing.
-const PosTabStub = () => <PlaceholderScreen titleKey="pos.title" />;
 const HistoryTabStub = () => <PlaceholderScreen titleKey="history.title" />;
 const DebtsTabStub = () => <PlaceholderScreen titleKey="customers.title" />;
 const MoreTabStub = () => <PlaceholderScreen titleKey="common.more" />;
@@ -91,7 +91,7 @@ const MainTabsNavigator = () => {
       }}>
       <MainTabs.Screen
         name="PosTab"
-        component={PosTabStub}
+        component={PosScreen}
         options={{ tabBarLabel: t('pos.title') }}
       />
       <MainTabs.Screen
