@@ -71,7 +71,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   File: `src/services/StockService.ts`, `src/database/models/stock-movement.ts`, `src/database/models/stock-movement` schema.
   Selesai: test math movement semua type (`in/out/adjustment/sale/void/return`); stok tidak pernah negatif tanpa alasan eksplisit.
 
-- [ ] **T1.5 — Cart store (Zustand)** 🧪
+- [x] **T1.5 — Cart store (Zustand)** 🧪
   File: `src/features/pos/cartStore.ts`.
   Selesai: add/edit qty/hapus/item note; diskon item (Rp/%); diskon transaksi (Rp/%); stacking dihitung benar (test tabel-driven termasuk edge: diskon > subtotal diblokir, cart kosong).
 
