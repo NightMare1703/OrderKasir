@@ -66,7 +66,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   Selesai: CRUD jalan dari UI; empty state fungsional ("Belum ada produk…" + CTA tambah).
   Catatan dari T1.2: PRD §7.4.2 belum punya kolom untuk label satuan `custom`; putuskan simpan di mana (rekomendasi: tambah kolom `custom_unit_label` via migrasi v3 append-only) sebelum membangun form.
 
-- [ ] **T1.4 — StockService inti** 🧪
+- [x] **T1.4 — StockService inti** 🧪
   Tujuan: satu-satunya mutator `products.stock`; selalu menulis `stock_movements` (type, qty signed, stock_before/after, reason, ref).
   File: `src/services/StockService.ts`, `src/database/models/stock-movement.ts`, `src/database/models/stock-movement` schema.
   Selesai: test math movement semua type (`in/out/adjustment/sale/void/return`); stok tidak pernah negatif tanpa alasan eksplisit.

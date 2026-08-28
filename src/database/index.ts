@@ -5,6 +5,7 @@ import { migrations } from './migrations';
 import Category from './models/category';
 import Product from './models/product';
 import Setting from './models/setting';
+import StockMovement from './models/stock-movement';
 import User from './models/user';
 import { appDatabaseSchema } from './schema';
 
@@ -15,6 +16,7 @@ export {
 export type { ColumnDef } from './conventions';
 export type { UserRole } from './models/user';
 export type { ProductUnit } from './models/product';
+export type { StockMovementType } from './models/stock-movement';
 
 const adapter = new SQLiteAdapter({
   schema: appDatabaseSchema,
@@ -26,5 +28,5 @@ const adapter = new SQLiteAdapter({
 
 export const database = new Database({
   adapter,
-  modelClasses: [Category, Product, Setting, User],
+  modelClasses: [Category, Product, Setting, StockMovement, User],
 });

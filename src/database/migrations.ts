@@ -45,6 +45,27 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 4,
+      steps: [
+        createTable({
+          name: 'stock_movements',
+          columns: withSyncColumns([
+            { name: 'product_id', type: 'string', isIndexed: true },
+            { name: 'type', type: 'string', isIndexed: true },
+            { name: 'qty', type: 'number' },
+            { name: 'stock_before', type: 'number' },
+            { name: 'stock_after', type: 'number' },
+            { name: 'reason', type: 'string', isOptional: true },
+            { name: 'ref_type', type: 'string', isOptional: true },
+            { name: 'ref_id', type: 'string', isOptional: true },
+            { name: 'user_id', type: 'string', isIndexed: true },
+            { name: 'created_at', type: 'number', isIndexed: true },
+            { name: 'updated_at', type: 'number' },
+          ]),
+        }),
+      ],
+    },
   ],
 });
 
