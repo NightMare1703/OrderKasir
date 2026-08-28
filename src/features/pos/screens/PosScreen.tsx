@@ -3,7 +3,6 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Animated,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,6 +19,7 @@ import { colors, radius, spacing, typography } from '../../../theme';
 import { formatRupiah } from '../../../utils/money';
 import { useCartStore } from '../cartStore';
 import { BarcodeScannerStubSheet } from '../../products/components/BarcodeScannerStubSheet';
+import { CartPanel } from '../components/CartPanel';
 
 type CategoryTabProps = {
   categories: Category[];
@@ -198,28 +198,6 @@ export const PosScreen = () => {
   const [scanVisible, setScanVisible] = React.useState(false);
 
   const addItem = useCartStore((state) => state.addItem);
-  const itemCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.qty, 0));
-
-  const bumpAnim = React.useRef(new Animated.Value(1)).current;
-  const prevCountRef = React.useRef(itemCount);
-
-  React.useEffect(() => {
-    if (itemCount > prevCountRef.current) {
-      Animated.sequence([
-        Animated.timing(bumpAnim, {
-          toValue: 1.15,
-          duration: 120,
-          useNativeDriver: true,
-        }),
-        Animated.timing(bumpAnim, {
-          toValue: 1,
-          duration: 130,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-    prevCountRef.current = itemCount;
-  }, [itemCount, bumpAnim]);
 
   const load = React.useCallback(async () => {
     const [allProducts, allCategories] = await Promise.all([
@@ -357,35 +335,29 @@ export const PosScreen = () => {
         onSelect={handleSelectCategory}
       />
 
-      <View style={styles.gridWrap}>
-        <FlashList
-          data={displayedProducts}
-          keyExtractor={keyExtractor}
-          numColumns={2}
-          renderItem={renderItem}
-          contentContainerStyle={styles.gridContent}
-          ListEmptyComponent={
-            products === null ? null : (
-              <PosEmptyState
-                query={query}
-                hasProducts={hasAnyProduct}
-                onAddProduct={handleAddProduct}
-                onClearSearch={handleClearSearch}
-              />
-            )
-          }
-          showsVerticalScrollIndicator={false}
-        />
+      <View style={styles.content}>
+        <View style={styles.gridWrap}>
+          <FlashList
+            data={displayedProducts}
+            keyExtractor={keyExtractor}
+            numColumns={2}
+            renderItem={renderItem}
+            contentContainerStyle={styles.gridContent}
+            ListEmptyComponent={
+              products === null ? null : (
+                <PosEmptyState
+                  query={query}
+                  hasProducts={hasAnyProduct}
+                  onAddProduct={handleAddProduct}
+                  onClearSearch={handleClearSearch}
+                />
+              )
+            }
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+        <CartPanel />
       </View>
-
-      <Animated.View style={[styles.fabWrap, { transform: [{ scale: bumpAnim }] }]}>
-        <View style={styles.fabBadge}>
-          <Text style={styles.fabBadgeText}>{itemCount}</Text>
-        </View>
-        <View style={styles.fabLabel}>
-          <Text style={styles.fabLabelText}>{t('pos.cartBadge', { count: itemCount })}</Text>
-        </View>
-      </Animated.View>
 
       <BarcodeScannerStubSheet
         visible={scanVisible}
@@ -467,8 +439,12 @@ const styles = StyleSheet.create({
   chipTextInactive: {
     color: colors.white[300],
   },
-  gridWrap: {
+  content: {
     flex: 1,
+    flexDirection: 'row',
+  },
+  gridWrap: {
+    flex: 0.65,
     minHeight: 200,
   },
   gridContent: {
@@ -577,42 +553,5 @@ const styles = StyleSheet.create({
   emptyGhostButtonText: {
     ...typography.heading,
     color: colors.white[300],
-  },
-  fabWrap: {
-    position: 'absolute',
-    bottom: spacing.xl,
-    right: spacing.xl,
-    alignItems: 'center',
-    flexDirection: 'row',
-    backgroundColor: colors.black[700],
-    borderColor: colors.black[600],
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    paddingLeft: spacing.sm,
-    paddingRight: spacing.md,
-    height: 48,
-    gap: spacing.sm,
-  },
-  fabBadge: {
-    backgroundColor: colors.orange[500],
-    borderRadius: radius.pill,
-    minWidth: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xs,
-  },
-  fabBadgeText: {
-    ...typography.heading,
-    color: colors.black[900],
-    fontSize: 14,
-  },
-  fabLabel: {
-    justifyContent: 'center',
-  },
-  fabLabelText: {
-    ...typography.caption,
-    color: colors.white[50],
-    fontWeight: '600',
   },
 });

@@ -79,7 +79,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   Grid produk dominan (~65% lebar), tab kategori, pencarian; tile ≥88dp; FlashList; tanpa inline closure di hot path.
   Selesai: tap produk masuk keranjang <200ms feel; badge keranjang bump animation.
 
-- [ ] **T1.7 — Cart panel & ladder harga**
+- [x] **T1.7 — Cart panel & ladder harga**
   Panel kanan / bottom sheet black.700; ladder subtotal → diskon → pajak (configurable, default off) → total bayar.
   Selesai: semua angka integer rupiah diformat via money util; edit qty & diskon dari panel.
 

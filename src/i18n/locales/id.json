@@ -30,7 +30,11 @@
     "emptyCta": "Tambah produk pertama",
     "cartBadge": "Keranjang · {{count}}",
     "lowStock": "Stok menipis",
-    "outOfStock": "Habis"
+    "outOfStock": "Habis",
+    "cartSubtotal": "Subtotal",
+    "cartDiscount": "Diskon",
+    "cartTotal": "Total bayar",
+    "cartPay": "Bayar"
   },
   "payment": {},
   "success": {},
