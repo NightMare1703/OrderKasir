@@ -262,6 +262,36 @@ Format: *Sebagai [peran], saya ingin [aksi], sehingga [manfaat].*
 - Backup file manual: export seluruh database ke file `.zip` (JSON) → share/save ke storage; import untuk restore.
 - Data sensitif (PIN, dsb.) tidak ikut di-backup; backup dapat dienkripsi (password-based AES) — konfigurasi Admin.
 
+### 5.9.1 Keputusan Arsitektur: `sync_queue` Custom vs WatermelonDB `synchronize()` — 29 Agustus 2026
+
+> Penambahan keputusan tanpa implementasi kode. Evaluasi diminta AGENTS.md §4.7 vs PRD §7.1/§7.4.3.
+
+#### A. Perbandingan singkat
+
+| Aspek | Custom `sync_queue` (status quo AGENTS.md §4.7 & PRD §7.4) | `synchronize({pullChanges,pushChanges})` bawaan WatermelonDB |
+|---|---|---|
+| **Kompleksitas kode** | Tinggi-menengah. Tiap write domain harus append ke `sync_queue` secara atomik dalam transaksi yang sama; perlu model + migration `sync_queue`, helper enqueue, drain batched, retry/backoff, vacuum `synced_at`, dan test kelupaan enqueue. Firebase adapter menguras queue (drain). | Rendah-menengah. WatermelonDB sudah melacak record dirty via kolom internal `_status`/`_changed` + `last_modified`/`deleted` yang memang sudah ada di semua tabel domain (PRD §7.4.3). App hanya mengimplementasikan dua fungsi adapter: `pullChanges({lastPulledAt})` dan `pushChanges({changes, lastPulledAt})` di `SyncService` → Firebase. Tidak ada tabel antrean tambahan. |
+| **Risiko inkonsistensi** | Dua sumber kebenaran: baris domain vs `payload` JSON di queue. Risiko payload stale, lupa enqueue di satu service, atau queue tertulis tapi domain rollback (atau sebaliknya) jika tidak dibungkus transaksi yang sama. Soft-delete harus diduplikasi manual. | Satu sumber kebenaran: tabel domain sendiri. WatermelonDB menjamin koleksi `created/updated/deleted` konsisten dari `_status`. Transaksi checkout atomik (PRD §7.4.3 butir 3) tidak perlu diperluas untuk menulis queue. Risiko drift hilang; konflik diminimalkan karena ledger `transactions`/`stock_movements` immutable. |
+| **Kesesuaian single-device + backup (bukan multi-device realtime)** | Sangat cocok untuk mental model "backup": upload batch saat online, restore = replace/merge sekali. Batching hemat baterai/kuota eksplisit via drain interval. Namun over-engineering untuk incremental sync yang sebenarnya hanya dibutuhkan saat restore di device baru. | Tetap cocok dan tidak berlebihan. Untuk v1 (PRD §11: multi-device out-of-scope), `pushChanges` melayani auto-backup incremental yang sama, `pullChanges` hanya dipanggil saat restore (lastPulledAt = 0 atau timestamp backup terakhir). Debounce `synchronize()` saat online + NetInfo mencapai efek batching/hemat baterai yang setara. Kelebihan: jalur yang sama langsung siap untuk multi-device realtime di v1.2 tanpa mengganti mekanisme sync. |
+| **Operasional** | Perlu monitoring ukuran queue, retry idempotency manual, dan konflik last-write-wins harus diimplementasi sendiri per record via `updated_at`. | Konflik last-write-wins per record via `last_modified` sudah ditangani protokol WatermelonDB; idempotency push/pull berbasis `lastPulledAt`. Indikator header (synced/pending N/offline) diambil dari `hasUnsyncedChanges()` / status `synchronize()` bukan `COUNT(*) sync_queue`. |
+
+#### B. Keputusan final
+
+**Dipilih: `synchronize()` bawaan WatermelonDB (`pullChanges`/`pushChanges`) — menggantikan `sync_queue` custom.**
+
+Keputusan ini diambil karena WatermelonDB sudah menyediakan tracking perubahan via `last_modified`/`deleted` sehingga tidak perlu tabel antrean tambahan. Hal ini menghilangkan risiko duplikasi payload stale dan kelupaan enqueue pada pendekatan `sync_queue`, serta mengurangi kode custom (enqueue atomik, drain, vacuum, retry) yang harus diuji. Pendekatan `synchronize()` tetap memenuhi kebutuhan v1 yang hanya single-device + backup — push incremental saat online dan pull hanya saat restore — dengan batching debounced yang setara hemat baterai tanpa mengorbankan offline-first. Selain itu, fondasi sync yang sama dapat langsung dipakai untuk multi-device di v1.2 tanpa migrasi ulang mekanisme, cukup mengganti adapter Firebase yang mengimplementasikan `pullChanges`/`pushChanges`.
+
+Implikasi: tabel `sync_queue` (PRD §7.4.2) tidak jadi dibuat di schema v1; `SyncService` membungkus `synchronize()` dengan adapter Firebase yang swappable (sesuai pinned decision AGENTS.md §3); aturan AGENTS.md §4.7 butir 7 perlu diperbarui dari "sync_queue pattern" menjadi "synchronize() pattern".
+
+#### C. Dampak ke ROADMAP T3.7
+
+**Ya — deskripsi T3.7 di `docs/ROADMAP.md` perlu direvisi sebelum eksekusi.**
+
+- **Deskripsi saat ini (sebelum keputusan):** "Semua write domain append `sync_queue`; drain batched saat online; last-write-wins via `last_modified`; indikator status header (synced/pending N/offline)."
+- **Revisi yang diperlukan (setelah keputusan):** Ubah menjadi "Implementasi `SyncService` berbasis `synchronize({pullChanges, pushChanges})` dengan Firebase sync-adapter; hapus `sync_queue` dari schema; kelola `lastPulledAt` di `settings`; push incremental debounced saat online + pull saat restore; indikator header dari `hasUnsyncedChanges()`/status synchronize; test dengan adapter mock yang mengimplementasikan protokol WatermelonDB (bukan drain queue)."
+- **Scope T3.7 tetap Fase 3,** estimasi tidak bertambah (justru berkurang karena tanpa tabel queue), namun acceptance criteria dan file yang disentuh berubah: `src/services/SyncService.ts` + `src/database/sync.ts` (adapter) + `src/database/schema.ts` (hapus `sync_queue`), bukan `src/database/models/sync-queue.ts`.
+- Tidak ada perubahan ke T3.8 (backup file manual `.zip` tetap sebagai jalur cadangan offline).
+
 ---
 
 ## 6. Non-Functional Requirements
