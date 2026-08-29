@@ -96,7 +96,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   QRIS/debit/transfer dicatat manual + reference opsional; split max 3 metode (sum = total); pilih pelanggan / buat inline untuk bon.
   Selesai: test split payment edge (lebih dari 3 metode ditolak, sum ≠ total ditolak); transaksi bon berstatus `debt` tersimpan.
 
-- [ ] **T1.11 — Payment success screen**
+- [x] **T1.11 — Payment success screen**
   Full-screen black, check hijau, kembalian hero, tombol cetak (stub) & transaksi baru instan.
   Selesai: layar muncul <500ms setelah checkout sukses.
 

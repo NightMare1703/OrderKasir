@@ -10,6 +10,7 @@ import * as React from 'react';
 
 import { colors, typography } from '../theme';
 import { LoginScreen } from '../features/auth/screens/LoginScreen';
+import { PaymentSuccessScreen } from '../features/pos/screens/PaymentSuccessScreen';
 import { PosScreen } from '../features/pos/screens/PosScreen';
 import { ProductFormScreen } from '../features/products/screens/ProductFormScreen';
 import { ProductListScreen } from '../features/products/screens/ProductListScreen';
@@ -34,15 +35,32 @@ export type ProductsStackParamList = {
   ProductForm: { productId: string } | undefined;
 };
 
+export type PosStackParamList = {
+  PosMain: undefined;
+  PaymentSuccess: { invoiceNo: string; change: number; total: number };
+};
+
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const MainTabs = createBottomTabNavigator<MainTabParamList>();
 const ProductsStack = createNativeStackNavigator<ProductsStackParamList>();
+const PosStack = createNativeStackNavigator<PosStackParamList>();
 
 // Stub layar kosong sesuai SCREENS.md peta navigasi: LoginPin → MainTabs.
 // Diganti layar sungguhan pada task masing-masing.
 const HistoryTabStub = () => <PlaceholderScreen titleKey="history.title" />;
 const DebtsTabStub = () => <PlaceholderScreen titleKey="customers.title" />;
 const MoreTabStub = () => <PlaceholderScreen titleKey="common.more" />;
+
+const PosNavigator = () => (
+  <PosStack.Navigator
+    screenOptions={{
+      contentStyle: { backgroundColor: colors.black[900] },
+      headerShown: false,
+    }}>
+    <PosStack.Screen component={PosScreen} name="PosMain" />
+    <PosStack.Screen component={PaymentSuccessScreen} name="PaymentSuccess" />
+  </PosStack.Navigator>
+);
 
 const ProductsNavigator = () => (
   <ProductsStack.Navigator
@@ -91,7 +109,7 @@ const MainTabsNavigator = () => {
       }}>
       <MainTabs.Screen
         name="PosTab"
-        component={PosScreen}
+        component={PosNavigator}
         options={{ tabBarLabel: t('pos.title') }}
       />
       <MainTabs.Screen

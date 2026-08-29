@@ -1,5 +1,6 @@
 import { FlashList } from '@shopify/flash-list';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -21,6 +22,7 @@ import { ProductService, matchesProductName } from '../../../services/ProductSer
 import { colors, radius, spacing, typography } from '../../../theme';
 import { formatRupiah } from '../../../utils/money';
 import { useSessionStore } from '../../auth/sessionStore';
+import type { PosStackParamList } from '../../../app/navigation';
 import {
   calculateCartTotals,
   calculateItemDiscountAmount,
@@ -202,7 +204,7 @@ PosEmptyState.displayName = 'PosEmptyState';
 
 export const PosScreen = () => {
   const { t } = useTranslation();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<PosStackParamList>>();
 
   const productService = React.useMemo(() => new ProductService(database), []);
   const checkoutService = React.useMemo(() => new CheckoutService(database), []);
@@ -302,10 +304,7 @@ export const PosScreen = () => {
   const handleAddProduct = React.useCallback(() => {
     const parent = navigation.getParent();
     if (parent) {
-      // Navigasi antar-tab: dari Kasir ke stack Produk → Form.
-      // Casting any agar tidak terkunci tipe MainTabParamList (T1.3 memakai
-      // struktur ProductsStack: ProductList / ProductForm).
-      (navigation as unknown as { navigate: (name: string, params?: unknown) => void }).navigate(
+      (parent as unknown as { navigate: (name: string, params?: unknown) => void }).navigate(
         'ProductsTab',
         { screen: 'ProductForm' } as unknown as undefined,
       );
@@ -395,13 +394,20 @@ export const PosScreen = () => {
       });
 
       if (checkoutResult.status === 'ok') {
+        const change =
+          result.type === 'cash' ? Math.max(0, result.received - totals.total) : 0;
         useCartStore.getState().clearCart();
         setPaymentVisible(false);
+        navigation.navigate('PaymentSuccess', {
+          invoiceNo: checkoutResult.invoiceNo,
+          change,
+          total: totals.total,
+        });
         return true;
       }
       return false;
     },
-    [checkoutService],
+    [checkoutService, navigation],
   );
 
   const handleQueryChange = React.useCallback((value: string) => {
