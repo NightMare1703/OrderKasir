@@ -112,7 +112,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   Form adjustment wajib alasan; log mutasi per produk; alert in-app stok ≤ min_stock (badge yellow.400).
   Selesai: semua perubahan lewat StockService; riwayat tercatat.
 
-- [ ] **T2.2 — Import/export CSV produk** 🧪
+- [x] **T2.2 — Import/export CSV produk** 🧪
   Template CSV disediakan; validasi baris dilaporkan per-baris; import bulk via StockService type `in`.
   File: `src/utils/csv.ts`, `src/services/ProductImportService.ts`.
   Selesai: test parsing (baris rusak dilaporkan, tidak menggagalkan semua).
