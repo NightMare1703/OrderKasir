@@ -16,6 +16,9 @@ import { PaymentSuccessScreen } from '../features/pos/screens/PaymentSuccessScre
 import { PosScreen } from '../features/pos/screens/PosScreen';
 import { ProductFormScreen } from '../features/products/screens/ProductFormScreen';
 import { ProductListScreen } from '../features/products/screens/ProductListScreen';
+import { InventoryScreen } from '../features/inventory/screens/InventoryScreen';
+import { StockAdjustmentScreen } from '../features/inventory/screens/StockAdjustmentScreen';
+import { StockMovementLogScreen } from '../features/inventory/screens/StockMovementLogScreen';
 import { PlaceholderScreen } from './PlaceholderScreen';
 
 export type RootStackParamList = {
@@ -35,6 +38,9 @@ export type ProductsStackParamList = {
   ProductList: undefined;
   // productId kosong/undefined = mode tambah produk baru.
   ProductForm: { productId: string } | undefined;
+  InventoryList: undefined;
+  StockAdjustment: { productId: string };
+  StockLog: { productId?: string };
 };
 
 export type PosStackParamList = {
@@ -83,6 +89,9 @@ const ProductsNavigator = () => (
       options={{ headerBackVisible: false }}
     />
     <ProductsStack.Screen component={ProductFormScreen} name="ProductForm" />
+    <ProductsStack.Screen component={InventoryScreen} name="InventoryList" />
+    <ProductsStack.Screen component={StockAdjustmentScreen} name="StockAdjustment" />
+    <ProductsStack.Screen component={StockMovementLogScreen} name="StockLog" />
   </ProductsStack.Navigator>
 );
 

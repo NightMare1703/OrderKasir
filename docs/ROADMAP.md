@@ -108,7 +108,7 @@ Legend: 🧪 = wajib ada unit test Jest.
 
 ## Fase 2 — Hardware & Stok
 
-- [ ] **T2.1 — Adjustment stok & log mutasi**
+- [x] **T2.1 — Adjustment stok & log mutasi**
   Form adjustment wajib alasan; log mutasi per produk; alert in-app stok ≤ min_stock (badge yellow.400).
   Selesai: semua perubahan lewat StockService; riwayat tercatat.
 

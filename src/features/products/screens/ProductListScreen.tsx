@@ -122,6 +122,11 @@ export const ProductListScreen = ({ navigation }: ProductListScreenProps) => {
 
   const isEmptyWithoutQuery = products !== null && products.length === 0 && query.trim() === '';
 
+  const lowCount = React.useMemo(() => {
+    if (products === null) return 0;
+    return products.filter((p) => p.stock <= p.minStock).length;
+  }, [products]);
+
   return (
     <View style={styles.container}>
       <View style={styles.searchRow}>
@@ -134,6 +139,24 @@ export const ProductListScreen = ({ navigation }: ProductListScreenProps) => {
         />
         <TouchableOpacity onPress={() => setScanVisible(true)} style={styles.scanButton}>
           <Text style={styles.scanButtonText}>{t('products.scan')}</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.inventoryBar}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('InventoryList')}
+          style={styles.inventoryButton}>
+          <Text style={styles.inventoryButtonText}>{t('inventory.title')}</Text>
+          {lowCount > 0 ? (
+            <View style={styles.yellowBadge}>
+              <Text style={styles.yellowBadgeText}>{lowCount}</Text>
+            </View>
+          ) : null}
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('StockLog', {})}
+          style={styles.logButton}>
+          <Text style={styles.logButtonText}>{t('inventory.logTitle')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -272,6 +295,58 @@ const styles = StyleSheet.create({
     color: colors.white[150],
     marginBottom: spacing.xs,
     textTransform: 'uppercase',
+  },
+  inventoryBar: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  inventoryButton: {
+    alignItems: 'center',
+    backgroundColor: colors.black[800],
+    borderColor: colors.black[600],
+    borderRadius: radius.input,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    minHeight: 40,
+    paddingHorizontal: spacing.lg,
+    justifyContent: 'center',
+  },
+  inventoryButtonText: {
+    ...typography.caption,
+    color: colors.white[300],
+    fontWeight: '600',
+  },
+  yellowBadge: {
+    backgroundColor: colors.yellow[400],
+    borderRadius: radius.pill,
+    height: 18,
+    minWidth: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  yellowBadgeText: {
+    ...typography.micro,
+    color: colors.black[900],
+    fontWeight: '700',
+    fontSize: 11,
+    lineHeight: 11,
+  },
+  logButton: {
+    alignItems: 'center',
+    borderColor: colors.black[600],
+    borderRadius: radius.input,
+    borderWidth: 1,
+    justifyContent: 'center',
+    minHeight: 40,
+    paddingHorizontal: spacing.lg,
+  },
+  logButtonText: {
+    ...typography.caption,
+    color: colors.white[300],
   },
   scanButton: {
     alignItems: 'center',
