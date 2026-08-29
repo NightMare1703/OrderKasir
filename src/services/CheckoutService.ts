@@ -155,6 +155,9 @@ export class CheckoutService {
     const total = afterItemDiscount - input.transactionDiscount + input.tax;
 
     let paymentsTotal = 0;
+    if (input.payments.length > 3) {
+      return { status: 'invalid_payment', index: 3, code: 'too_many_methods' };
+    }
     for (let index = 0; index < input.payments.length; index += 1) {
       const payment = input.payments[index];
       if (!isValidPaymentMethod(payment.method)) {

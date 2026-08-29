@@ -92,7 +92,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   Selesai: validasi uang kurang diblokir dengan pesan actionable; kembalian benar (test).
   Catatan: checkout tunai menyimpan transaksi via CheckoutService (single payment `cash`); `userId` dari session store (diisi saat login), `shiftId` masih placeholder `shift-1` sampai ShiftService (T3.1) + gate BukaShift (T3.2). Layar sukses menyusul T1.11.
 
-- [ ] **T1.10 — Non-tunai manual, split payment, kas bon entry** 🧪
+- [x] **T1.10 — Non-tunai manual, split payment, kas bon entry** 🧪
   QRIS/debit/transfer dicatat manual + reference opsional; split max 3 metode (sum = total); pilih pelanggan / buat inline untuk bon.
   Selesai: test split payment edge (lebih dari 3 metode ditolak, sum ≠ total ditolak); transaksi bon berstatus `debt` tersimpan.
 

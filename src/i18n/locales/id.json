@@ -45,9 +45,40 @@
     "shortcut20": "20rb",
     "shortcut50": "50rb",
     "shortcut100": "100rb",
-    "pay": "Bayar"
+    "pay": "Bayar",
+    "methodCash": "Tunai",
+    "methodQris": "QRIS",
+    "methodDebit": "Debit",
+    "methodTransfer": "Transfer",
+    "reference": "Referensi",
+    "referencePlaceholder": "No. referensi EDC/QRIS (opsional)",
+    "splitTitle": "Bayar campuran",
+    "splitAdd": "Tambah metode",
+    "splitRemove": "Hapus",
+    "splitMaxMethods": "Maksimal 3 metode pembayaran",
+    "splitSumMismatch": "Total pembayaran harus sama dengan total bayar",
+    "splitRemaining": "Sisa: {{amount}}",
+    "bonTitle": "Kas bon",
+    "bonSelectCustomer": "Pilih pelanggan",
+    "bonCreateCustomer": "+ Buat pelanggan baru",
+    "bonCustomerName": "Nama pelanggan",
+    "bonCustomerPhone": "Nomor HP (opsional)",
+    "bonCustomerNote": "Catatan (opsional)",
+    "bonDebtLimit": "Plafon bon (opsional)",
+    "bonDebtLimitWarning": "Melebihi plafon bon pelanggan",
+    "bonCreate": "Buat bon",
+    "noCustomerSelected": "Pelanggan wajib dipilih untuk kas bon",
+    "modeSingle": "Satu metode",
+    "modeSplit": "Bayar campuran",
+    "modeBon": "Kas bon"
   },
-  "success": {},
+  "success": {
+    "title": "Pembayaran berhasil",
+    "change": "Kembalian",
+    "print": "Cetak struk",
+    "share": "Bagikan",
+    "newTransaction": "Transaksi baru"
+  },
   "history": {
     "title": "Riwayat"
   },
@@ -97,7 +128,11 @@
   },
   "inventory": {},
   "customers": {
-    "title": "Piutang"
+    "title": "Piutang",
+    "searchPlaceholder": "Cari nama pelanggan",
+    "emptyTitle": "Belum ada pelanggan",
+    "emptyHint": "Tambahkan pelanggan pertama",
+    "emptyCta": "Tambah pelanggan"
   },
   "shift": {},
   "reports": {},

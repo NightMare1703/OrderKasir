@@ -2,7 +2,7 @@ import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 import { withSyncColumns } from './conventions';
 
-export const DATABASE_SCHEMA_VERSION = 5;
+export const DATABASE_SCHEMA_VERSION = 6;
 
 // v1 masih pra-rilis: users & settings dimasukkan langsung ke v1 (belum ada
 // instalasi produksi, jadi tidak melanggar aturan append-only migrations).
@@ -10,9 +10,21 @@ export const DATABASE_SCHEMA_VERSION = 5;
 // v3: custom_unit_label untuk satuan custom produk (T1.3).
 // v4: stock_movements audit trail (T1.4).
 // v5: transactions, transaction_items, payments (T1.8).
+// v6: customers (T1.10 - needed for kas bon).
 export const appDatabaseSchema = appSchema({
   version: DATABASE_SCHEMA_VERSION,
   tables: [
+    tableSchema({
+      name: 'customers',
+      columns: withSyncColumns([
+        { name: 'name', type: 'string', isIndexed: true },
+        { name: 'phone', type: 'string', isOptional: true },
+        { name: 'note', type: 'string', isOptional: true },
+        { name: 'debt_limit', type: 'number', isOptional: true },
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
+      ]),
+    }),
     tableSchema({
       name: 'categories',
       columns: withSyncColumns([

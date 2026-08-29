@@ -41,9 +41,40 @@
     "shortcut20": "20k",
     "shortcut50": "50k",
     "shortcut100": "100k",
-    "pay": "Pay"
+    "pay": "Pay",
+    "methodCash": "Cash",
+    "methodQris": "QRIS",
+    "methodDebit": "Debit",
+    "methodTransfer": "Transfer",
+    "reference": "Reference",
+    "referencePlaceholder": "Ref no. EDC/QRIS (optional)",
+    "splitTitle": "Split payment",
+    "splitAdd": "Add method",
+    "splitRemove": "Remove",
+    "splitMaxMethods": "Maximum 3 payment methods",
+    "splitSumMismatch": "Payment total must equal amount due",
+    "splitRemaining": "Remaining: {{amount}}",
+    "bonTitle": "Credit sale",
+    "bonSelectCustomer": "Select customer",
+    "bonCreateCustomer": "+ New customer",
+    "bonCustomerName": "Customer name",
+    "bonCustomerPhone": "Phone (optional)",
+    "bonCustomerNote": "Note (optional)",
+    "bonDebtLimit": "Credit limit (optional)",
+    "bonDebtLimitWarning": "Exceeds customer credit limit",
+    "bonCreate": "Create credit",
+    "noCustomerSelected": "Customer required for credit sale",
+    "modeSingle": "Single method",
+    "modeSplit": "Split payment",
+    "modeBon": "Credit sale"
   },
-  "success": {},
+  "success": {
+    "title": "Payment successful",
+    "change": "Change",
+    "print": "Print receipt",
+    "share": "Share",
+    "newTransaction": "New transaction"
+  },
   "history": {
     "title": "History"
   },
@@ -93,7 +124,11 @@
   },
   "inventory": {},
   "customers": {
-    "title": "Debts"
+    "title": "Debts",
+    "searchPlaceholder": "Search customer name",
+    "emptyTitle": "No customers yet",
+    "emptyHint": "Add your first customer",
+    "emptyCta": "Add customer"
   },
   "shift": {},
   "reports": {},

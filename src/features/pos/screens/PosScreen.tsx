@@ -14,7 +14,9 @@ import {
 import { database } from '../../../database';
 import type Category from '../../../database/models/category';
 import type Product from '../../../database/models/product';
+import type Customer from '../../../database/models/customer';
 import { CheckoutService } from '../../../services/CheckoutService';
+import { CustomerService } from '../../../services/CustomerService';
 import { ProductService, matchesProductName } from '../../../services/ProductService';
 import { colors, radius, spacing, typography } from '../../../theme';
 import { formatRupiah } from '../../../utils/money';
@@ -26,11 +28,13 @@ import {
 } from '../cartStore';
 import { BarcodeScannerStubSheet } from '../../products/components/BarcodeScannerStubSheet';
 import { CartPanel } from '../components/CartPanel';
-import { CashPaymentSheet } from '../components/CashPaymentSheet';
+import { PaymentSheet, PaymentSheetResult } from '../components/PaymentSheet';
 
 // T3.1 (ShiftService) akan menyediakan id shift aktif; sampai gate BukaShift
 // (T3.2) ada, checkout memakai placeholder yang sama dengan skema uji T1.8.
 const SHIFT_PLACEHOLDER_ID = 'shift-1';
+
+const customerService = new CustomerService(database);
 
 type CategoryTabProps = {
   categories: Category[];
@@ -205,6 +209,7 @@ export const PosScreen = () => {
 
   const [products, setProducts] = React.useState<Product[] | null>(null);
   const [categories, setCategories] = React.useState<Category[]>([]);
+  const [customers, setCustomers] = React.useState<Customer[]>([]);
   const [query, setQuery] = React.useState('');
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null);
   const [scanVisible, setScanVisible] = React.useState(false);
@@ -220,12 +225,14 @@ export const PosScreen = () => {
   );
 
   const load = React.useCallback(async () => {
-    const [allProducts, allCategories] = await Promise.all([
+    const [allProducts, allCategories, allCustomers] = await Promise.all([
       productService.listProducts(),
       productService.listCategories(),
+      customerService.listCustomers(),
     ]);
     setProducts(allProducts);
     setCategories(allCategories);
+    setCustomers(allCustomers);
   }, [productService]);
 
   React.useEffect(() => {
@@ -331,8 +338,15 @@ export const PosScreen = () => {
     setPaymentVisible(false);
   }, []);
 
-  const handleConfirm = React.useCallback(
-    async (received: number): Promise<boolean> => {
+  const handleCreateCustomer = React.useCallback(
+    async (name: string, phone?: string | null, note?: string | null, debtLimit?: number | null): Promise<Customer> => {
+      return customerService.createCustomer({ name, phone, note, debtLimit });
+    },
+    [],
+  );
+
+  const handlePaymentConfirm = React.useCallback(
+    async (result: PaymentSheetResult): Promise<boolean> => {
       const currentUserId = useSessionStore.getState().currentUserId;
       if (currentUserId === null) {
         return false;
@@ -347,17 +361,40 @@ export const PosScreen = () => {
         discount: calculateItemDiscountAmount(item),
       }));
 
-      const result = await checkoutService.checkout({
+      let payments: { method: 'cash' | 'qris' | 'debit' | 'transfer'; amount: number; reference?: string | null }[] = [];
+      let status: 'paid' | 'debt' = 'paid';
+      let customerId: string | null = null;
+
+      if (result.type === 'cash') {
+        payments = [{ method: 'cash', amount: result.received }];
+      } else if (result.type === 'split') {
+        payments = result.payments.map((p) => ({
+          method: p.method,
+          amount: p.amount,
+          reference: p.reference ?? null,
+        }));
+      } else if (result.type === 'bon') {
+        status = 'debt';
+        customerId = result.customer.id;
+        payments = result.payments.map((p) => ({
+          method: p.method,
+          amount: p.amount,
+          reference: p.reference ?? null,
+        }));
+      }
+
+      const checkoutResult = await checkoutService.checkout({
         shiftId: SHIFT_PLACEHOLDER_ID,
         userId: currentUserId,
+        customerId,
         items,
         transactionDiscount: totals.transactionDiscountAmount,
         tax: 0,
-        payments: [{ method: 'cash', amount: received }],
-        status: 'paid',
+        payments,
+        status,
       });
 
-      if (result.status === 'ok') {
+      if (checkoutResult.status === 'ok') {
         useCartStore.getState().clearCart();
         setPaymentVisible(false);
         return true;
@@ -429,11 +466,13 @@ export const PosScreen = () => {
         onSubmit={handleScanSubmit}
       />
 
-      <CashPaymentSheet
+      <PaymentSheet
         total={cartTotal}
         visible={paymentVisible}
         onClose={handleClosePayment}
-        onConfirm={handleConfirm}
+        onConfirm={handlePaymentConfirm}
+        customers={customers}
+        onCreateCustomer={handleCreateCustomer}
       />
     </View>
   );

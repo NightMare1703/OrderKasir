@@ -1,7 +1,6 @@
 import { addColumns, createTable, schemaMigrations } from '@nozbe/watermelondb/Schema/migrations';
 
 import { withSyncColumns } from './conventions';
-import { DATABASE_SCHEMA_VERSION } from './schema';
 
 // Append-only: tambah entri baru per versi schema, jangan pernah mengubah yang sudah rilis.
 export const migrations = schemaMigrations({
@@ -115,9 +114,25 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 6,
+      steps: [
+        createTable({
+          name: 'customers',
+          columns: withSyncColumns([
+            { name: 'name', type: 'string', isIndexed: true },
+            { name: 'phone', type: 'string', isOptional: true },
+            { name: 'note', type: 'string', isOptional: true },
+            { name: 'debt_limit', type: 'number', isOptional: true },
+            { name: 'created_at', type: 'number' },
+            { name: 'updated_at', type: 'number' },
+          ]),
+        }),
+      ],
+    },
   ],
 });
 
 export const migrationEvents = {
-  currentVersion: DATABASE_SCHEMA_VERSION,
+  currentVersion: 6,
 };

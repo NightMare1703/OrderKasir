@@ -3,6 +3,7 @@ import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 
 import { migrations } from './migrations';
 import Category from './models/category';
+import Customer from './models/customer';
 import Payment from './models/payment';
 import Product from './models/product';
 import Setting from './models/setting';
@@ -35,6 +36,7 @@ export const database = new Database({
   adapter,
   modelClasses: [
     Category,
+    Customer,
     Payment,
     Product,
     Setting,

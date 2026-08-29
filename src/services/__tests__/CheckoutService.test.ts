@@ -3,6 +3,7 @@ import LokiJSAdapter from '@nozbe/watermelondb/adapters/lokijs';
 import logger from '@nozbe/watermelondb/utils/common/logger';
 
 import Category from '../../database/models/category';
+import Customer from '../../database/models/customer';
 import Payment from '../../database/models/payment';
 import Product from '../../database/models/product';
 import Setting from '../../database/models/setting';
@@ -26,6 +27,7 @@ const makeDb = () => {
     adapter,
     modelClasses: [
       Category,
+      Customer,
       Payment,
       Product,
       Setting,
@@ -449,5 +451,172 @@ describe('CheckoutService - atomicity & snapshot (T1.8)', () => {
     });
 
     expect(result).toEqual({ status: 'invalid_status', value: 'void' });
+  });
+
+  // T1.10 — Split payment edge cases
+  it('split payment > 3 metode ditolak', async () => {
+    const { db, service } = makeHarness();
+    const product = await createProduct(db, { stock: 10, sellPrice: 20_000 });
+    const user = await createUser(db);
+
+    const result = await service.checkout({
+      shiftId: 'shift-1',
+      userId: user.id,
+      items: [{ productId: product.id, qty: 1, unitPrice: 20_000, discount: 0 }],
+      transactionDiscount: 0,
+      tax: 0,
+      payments: [
+        { method: 'cash', amount: 5_000 },
+        { method: 'qris', amount: 5_000 },
+        { method: 'debit', amount: 5_000 },
+        { method: 'transfer', amount: 5_000 },
+      ],
+      status: 'paid',
+    });
+
+    expect(result).toEqual({
+      status: 'invalid_payment',
+      index: 3,
+      code: 'too_many_methods',
+    });
+    expect(await count(db, 'transactions')).toBe(0);
+  });
+
+  it('split payment sum > total ditolak', async () => {
+    const { db, service } = makeHarness();
+    const product = await createProduct(db, { stock: 10, sellPrice: 10_000 });
+    const user = await createUser(db);
+
+    const result = await service.checkout({
+      shiftId: 'shift-1',
+      userId: user.id,
+      items: [{ productId: product.id, qty: 1, unitPrice: 10_000, discount: 0 }],
+      transactionDiscount: 0,
+      tax: 0,
+      payments: [
+        { method: 'cash', amount: 6_000 },
+        { method: 'qris', amount: 6_000 },
+      ],
+      status: 'paid',
+    });
+
+    expect(result).toEqual({
+      status: 'payment_total_mismatch',
+      expected: 10_000,
+      actual: 12_000,
+    });
+    expect(await count(db, 'transactions')).toBe(0);
+  });
+
+  it('split payment sum < total ditolak untuk status paid', async () => {
+    const { db, service } = makeHarness();
+    const product = await createProduct(db, { stock: 10, sellPrice: 10_000 });
+    const user = await createUser(db);
+
+    const result = await service.checkout({
+      shiftId: 'shift-1',
+      userId: user.id,
+      items: [{ productId: product.id, qty: 1, unitPrice: 10_000, discount: 0 }],
+      transactionDiscount: 0,
+      tax: 0,
+      payments: [
+        { method: 'cash', amount: 4_000 },
+        { method: 'qris', amount: 4_000 },
+      ],
+      status: 'paid',
+    });
+
+    expect(result).toEqual({
+      status: 'payment_total_mismatch',
+      expected: 10_000,
+      actual: 8_000,
+    });
+    expect(await count(db, 'transactions')).toBe(0);
+  });
+
+  it('bon status mewajibkan customer', async () => {
+    const { db, service } = makeHarness();
+    const product = await createProduct(db, { stock: 5, sellPrice: 20_000 });
+    const user = await createUser(db);
+
+    const missingCustomer = await service.checkout({
+      shiftId: 'shift-1',
+      userId: user.id,
+      items: [{ productId: product.id, qty: 1, unitPrice: 20_000, discount: 0 }],
+      transactionDiscount: 0,
+      tax: 0,
+      payments: [],
+      status: 'debt',
+    });
+    expect(missingCustomer).toEqual({ status: 'customer_required' });
+  });
+
+  it('bon status dengan customer menulis transaksi debt', async () => {
+    const { db, service } = makeHarness();
+    const product = await createProduct(db, { stock: 5, sellPrice: 20_000 });
+    const user = await createUser(db);
+
+    const result = await service.checkout({
+      shiftId: 'shift-1',
+      userId: user.id,
+      customerId: 'cust-1',
+      items: [{ productId: product.id, qty: 1, unitPrice: 20_000, discount: 0 }],
+      transactionDiscount: 0,
+      tax: 0,
+      payments: [],
+      status: 'debt',
+    });
+    expect(result.status).toBe('ok');
+    if (result.status !== 'ok') return;
+    expect(result.transaction.status).toBe('debt');
+    expect(result.transaction.customerId).toBe('cust-1');
+    expect(await count(db, 'payments')).toBe(0);
+  });
+
+  it('bon status dengan partial payment (paymentsTotal <= total) diperbolehkan', async () => {
+    const { db, service } = makeHarness();
+    const product = await createProduct(db, { stock: 5, sellPrice: 20_000 });
+    const user = await createUser(db);
+
+    const result = await service.checkout({
+      shiftId: 'shift-1',
+      userId: user.id,
+      customerId: 'cust-1',
+      items: [{ productId: product.id, qty: 1, unitPrice: 20_000, discount: 0 }],
+      transactionDiscount: 0,
+      tax: 0,
+      payments: [{ method: 'cash', amount: 5_000 }],
+      status: 'debt',
+    });
+    expect(result.status).toBe('ok');
+    if (result.status !== 'ok') return;
+    expect(result.transaction.status).toBe('debt');
+    expect(result.transaction.customerId).toBe('cust-1');
+    const payments = await db.get<Payment>('payments').query().fetch();
+    expect(payments).toHaveLength(1);
+    expect(payments[0].amount).toBe(5_000);
+  });
+
+  it('bon status menolak paymentsTotal > total', async () => {
+    const { db, service } = makeHarness();
+    const product = await createProduct(db, { stock: 5, sellPrice: 20_000 });
+    const user = await createUser(db);
+
+    const result = await service.checkout({
+      shiftId: 'shift-1',
+      userId: user.id,
+      customerId: 'cust-1',
+      items: [{ productId: product.id, qty: 1, unitPrice: 20_000, discount: 0 }],
+      transactionDiscount: 0,
+      tax: 0,
+      payments: [{ method: 'cash', amount: 25_000 }],
+      status: 'debt',
+    });
+    expect(result).toEqual({
+      status: 'payment_total_mismatch',
+      expected: 20_000,
+      actual: 25_000,
+    });
+    expect(await count(db, 'transactions')).toBe(0);
   });
 });
