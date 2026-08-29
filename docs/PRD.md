@@ -253,14 +253,16 @@ Format: *Sebagai [peran], saya ingin [aksi], sehingga [manfaat].*
 
 ### 5.9 Backup Cloud & Sinkronisasi
 
-**Prinsip:** lokal adalah sumber kebenaran; cloud adalah backup & jalur restore.
+**Prinsip:** lokal adalah sumber kebenaran; cloud adalah backup & jalur restore. **v1 adalah single-primary-device** — hanya satu perangkat aktif yang memegang riwayat transaksi finansial yang sah pada satu waktu.
 
 - **Auto-backup** ke Firebase ketika: app online + ada perubahan sejak backup terakhir + batching maksimal tiap X menit (hemat baterai/kuota).
 - Indikator status sinkronisasi di header (icon: synced / pending N changes / offline).
-- **Restore** saat login di perangkat baru: pilih backup terbaru → merge/replace dengan konfirmasi eksplisit.
-- Conflict resolution v1: **last-write-wins per record** dengan kolom `updated_at`; transaksi bersifat immutable sehingga konflik minim.
-- Backup file manual: export seluruh database ke file `.zip` (JSON) → share/save ke storage; import untuk restore.
+- **Restore v1 — replace-only (menggantikan seluruh data lokal):** saat login di perangkat baru atau via Pengaturan → Backup, pengguna memilih backup (mis. terbaru atau versi sebelumnya) → sistem menampilkan **preview ringkas** sebelum eksekusi (tanggal & waktu backup, perangkat sumber, jumlah transaksi/produk/pelanggan, rentang tanggal transaksi, ukuran backup, status enkripsi) → pengguna wajib memberikan **konfirmasi eksplisit** (mis. centang "Saya mengerti data lokal saat ini akan terhapus dan digantikan" + tombol konfirmasi) → eksekusi menggantikan **seluruh** database lokal dengan isi backup terpilih secara atomik.
+  - **Tidak ada opsi merge di v1.** Rasional: merge dua riwayat transaksi finansial yang independen berisiko tabrakan nomor invoice (`INV-YYYYMMDD-XXXX`), duplikasi `stock_movements` yang bersifat immutable, dan salah hitung stok/expected cash shift. Replace-only menjamin konsistensi finansial pada model single-primary-device.
+  - Opsi **merge** (penggabungan riwayat) sengaja ditunda ke **v1.2 multi-device** — lihat §8 Roadmap.
+- Backup file manual: export seluruh database ke file `.zip` (JSON) → share/save ke storage; import untuk restore juga bersifat **replace-only** dengan preview ringkas & konfirmasi eksplisit yang sama seperti restore cloud.
 - Data sensitif (PIN, dsb.) tidak ikut di-backup; backup dapat dienkripsi (password-based AES) — konfigurasi Admin.
+- **Konflik v1:** tidak ada resolusi konflik antar-perangkat karena v1 single-primary-device dan restore bersifat replace penuh. Sinkronisasi incremental (push auto-backup) tidak memerlukan last-write-wins antar device di v1; transaksi dan `stock_movements` tetap immutable sehingga setiap backup adalah snapshot yang konsisten.
 
 ### 5.9.1 Keputusan Arsitektur: `sync_queue` Custom vs WatermelonDB `synchronize()` — 29 Agustus 2026
 
@@ -272,7 +274,7 @@ Format: *Sebagai [peran], saya ingin [aksi], sehingga [manfaat].*
 |---|---|---|
 | **Kompleksitas kode** | Tinggi-menengah. Tiap write domain harus append ke `sync_queue` secara atomik dalam transaksi yang sama; perlu model + migration `sync_queue`, helper enqueue, drain batched, retry/backoff, vacuum `synced_at`, dan test kelupaan enqueue. Firebase adapter menguras queue (drain). | Rendah-menengah. WatermelonDB sudah melacak record dirty via kolom internal `_status`/`_changed` + `last_modified`/`deleted` yang memang sudah ada di semua tabel domain (PRD §7.4.3). App hanya mengimplementasikan dua fungsi adapter: `pullChanges({lastPulledAt})` dan `pushChanges({changes, lastPulledAt})` di `SyncService` → Firebase. Tidak ada tabel antrean tambahan. |
 | **Risiko inkonsistensi** | Dua sumber kebenaran: baris domain vs `payload` JSON di queue. Risiko payload stale, lupa enqueue di satu service, atau queue tertulis tapi domain rollback (atau sebaliknya) jika tidak dibungkus transaksi yang sama. Soft-delete harus diduplikasi manual. | Satu sumber kebenaran: tabel domain sendiri. WatermelonDB menjamin koleksi `created/updated/deleted` konsisten dari `_status`. Transaksi checkout atomik (PRD §7.4.3 butir 3) tidak perlu diperluas untuk menulis queue. Risiko drift hilang; konflik diminimalkan karena ledger `transactions`/`stock_movements` immutable. |
-| **Kesesuaian single-device + backup (bukan multi-device realtime)** | Sangat cocok untuk mental model "backup": upload batch saat online, restore = replace/merge sekali. Batching hemat baterai/kuota eksplisit via drain interval. Namun over-engineering untuk incremental sync yang sebenarnya hanya dibutuhkan saat restore di device baru. | Tetap cocok dan tidak berlebihan. Untuk v1 (PRD §11: multi-device out-of-scope), `pushChanges` melayani auto-backup incremental yang sama, `pullChanges` hanya dipanggil saat restore (lastPulledAt = 0 atau timestamp backup terakhir). Debounce `synchronize()` saat online + NetInfo mencapai efek batching/hemat baterai yang setara. Kelebihan: jalur yang sama langsung siap untuk multi-device realtime di v1.2 tanpa mengganti mekanisme sync. |
+| **Kesesuaian single-device + backup (bukan multi-device realtime)** | Sangat cocok untuk mental model "backup": upload batch saat online, restore = **replace-only (full replace)** sekali di v1 (merge ditunda ke v1.2 — lihat §5.9 & §8). Batching hemat baterai/kuota eksplisit via drain interval. Namun over-engineering untuk incremental sync yang sebenarnya hanya dibutuhkan saat restore di device baru. | Tetap cocok dan tidak berlebihan. Untuk v1 (PRD §11: multi-device out-of-scope), `pushChanges` melayani auto-backup incremental yang sama, `pullChanges` hanya dipanggil saat restore replace-only (lastPulledAt = 0 atau timestamp backup terakhir, menggantikan seluruh DB lokal). Debounce `synchronize()` saat online + NetInfo mencapai efek batching/hemat baterai yang setara. Kelebihan: jalur yang sama langsung siap untuk multi-device realtime & restore merge di v1.2 tanpa mengganti mekanisme sync. |
 | **Operasional** | Perlu monitoring ukuran queue, retry idempotency manual, dan konflik last-write-wins harus diimplementasi sendiri per record via `updated_at`. | Konflik last-write-wins per record via `last_modified` sudah ditangani protokol WatermelonDB; idempotency push/pull berbasis `lastPulledAt`. Indikator header (synced/pending N/offline) diambil dari `hasUnsyncedChanges()` / status `synchronize()` bukan `COUNT(*) sync_queue`. |
 
 #### B. Keputusan final
@@ -633,7 +635,7 @@ Shift kasir lengkap, piutang/kas bon + pelunasan, laporan & dashboard + export, 
 
 ### Pasca-MVP (indikatif)
 - v1.1: QRIS dinamis (API partner), pengeluaran biaya operasional, retur barang.
-- v1.2: Multi-outlet + multi-device realtime sync, e-invoice sederhana.
+- v1.2: Multi-outlet + multi-device realtime sync, e-invoice sederhana, serta **restore mode merge** (penggabungan riwayat transaksi finansial antar-perangkat) — memerlukan desain khusus untuk penanganan tabrakan nomor invoice (`INV-YYYYMMDD-XXXX`), rekonsiliasi stok/`stock_movements` immutable, dan kebijakan konflik last-write-wins per record via `last_modified`/`updated_at` yang tidak termasuk scope v1 replace-only (§5.9).
 - v2.0: Loyalty program, integrasi e-commerce/marketplace, iOS.
 
 ---
