@@ -10,6 +10,8 @@ import * as React from 'react';
 
 import { colors, typography } from '../theme';
 import { LoginScreen } from '../features/auth/screens/LoginScreen';
+import { TransactionDetailScreen } from '../features/history/screens/TransactionDetailScreen';
+import { TransactionHistoryScreen } from '../features/history/screens/TransactionHistoryScreen';
 import { PaymentSuccessScreen } from '../features/pos/screens/PaymentSuccessScreen';
 import { PosScreen } from '../features/pos/screens/PosScreen';
 import { ProductFormScreen } from '../features/products/screens/ProductFormScreen';
@@ -40,14 +42,19 @@ export type PosStackParamList = {
   PaymentSuccess: { invoiceNo: string; change: number; total: number };
 };
 
+export type HistoryStackParamList = {
+  HistoryList: undefined;
+  HistoryDetail: { transactionId: string };
+};
+
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const MainTabs = createBottomTabNavigator<MainTabParamList>();
 const ProductsStack = createNativeStackNavigator<ProductsStackParamList>();
 const PosStack = createNativeStackNavigator<PosStackParamList>();
+const HistoryStack = createNativeStackNavigator<HistoryStackParamList>();
 
 // Stub layar kosong sesuai SCREENS.md peta navigasi: LoginPin → MainTabs.
 // Diganti layar sungguhan pada task masing-masing.
-const HistoryTabStub = () => <PlaceholderScreen titleKey="history.title" />;
 const DebtsTabStub = () => <PlaceholderScreen titleKey="customers.title" />;
 const MoreTabStub = () => <PlaceholderScreen titleKey="common.more" />;
 
@@ -77,6 +84,23 @@ const ProductsNavigator = () => (
     />
     <ProductsStack.Screen component={ProductFormScreen} name="ProductForm" />
   </ProductsStack.Navigator>
+);
+
+const HistoryNavigator = () => (
+  <HistoryStack.Navigator
+    screenOptions={{
+      contentStyle: { backgroundColor: colors.black[900] },
+      headerStyle: { backgroundColor: colors.black[900] },
+      headerTintColor: colors.white[50],
+      headerTitleStyle: typography.heading,
+    }}>
+    <HistoryStack.Screen
+      component={TransactionHistoryScreen}
+      name="HistoryList"
+      options={{ headerBackVisible: false, title: 'Riwayat' }}
+    />
+    <HistoryStack.Screen component={TransactionDetailScreen} name="HistoryDetail" />
+  </HistoryStack.Navigator>
 );
 
 const navigationTheme: Theme = {
@@ -114,7 +138,7 @@ const MainTabsNavigator = () => {
       />
       <MainTabs.Screen
         name="HistoryTab"
-        component={HistoryTabStub}
+        component={HistoryNavigator}
         options={{ tabBarLabel: t('history.title') }}
       />
       <MainTabs.Screen

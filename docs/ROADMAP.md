@@ -100,7 +100,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   Full-screen black, check hijau, kembalian hero, tombol cetak (stub) & transaksi baru instan.
   Selesai: layar muncul <500ms setelah checkout sukses.
 
-- [ ] **T1.12 — Riwayat transaksi + detail + void** 🧪
+- [x] **T1.12 — Riwayat transaksi + detail + void** 🧪
   Filter tanggal/metode/kasir; detail immutable read-only; void butuh PIN admin + wajib alasan → restore stok via stock_movements (US-09).
   Selesai: test void flow; list pakai FlashList.
 
