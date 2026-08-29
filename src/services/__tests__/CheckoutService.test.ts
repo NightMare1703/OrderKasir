@@ -619,4 +619,56 @@ describe('CheckoutService - atomicity & snapshot (T1.8)', () => {
     });
     expect(await count(db, 'transactions')).toBe(0);
   });
+
+  it('defensif: duplikat invoice_no di dalam write melempar error dan rollback', async () => {
+    const { db, service, now } = makeHarness();
+    const product = await createProduct(db, { stock: 10, sellPrice: 5_000 });
+    const user = await createUser(db);
+
+    const duplicateInvoiceNo = 'INV-20260827-0001';
+    await db.write(async () => {
+      await db.get<Transaction>('transactions').create((raw) => {
+        raw.invoiceNo = duplicateInvoiceNo;
+        raw.shiftId = 'shift-1';
+        raw.userId = user.id;
+        raw.customerId = null;
+        raw.subtotal = 5_000;
+        raw.discount = 0;
+        raw.tax = 0;
+        raw.total = 5_000;
+        raw.status = 'paid';
+        raw.voidReason = null;
+        raw.voidByUserId = null;
+        raw.createdAt = now();
+        raw.updatedAt = now();
+        raw._setRaw('deleted', false);
+        raw._setRaw('last_modified', now());
+      });
+    });
+
+    const spy = jest
+      .spyOn(service as unknown as { nextInvoiceNo: (ts: number) => Promise<string | null> }, 'nextInvoiceNo')
+      .mockResolvedValue(duplicateInvoiceNo);
+
+    await expect(
+      service.checkout(
+        makeBaseInput(
+          user.id,
+          [{ productId: product.id, qty: 1, unitPrice: 5_000, discount: 0 }],
+          [{ method: 'cash', amount: 5_000 }],
+        ),
+      ),
+    ).rejects.toThrow(`duplikat invoice_no terdeteksi: ${duplicateInvoiceNo}`);
+
+    spy.mockRestore();
+
+    // LokiJSAdapter in-memory tidak me-rollback baris yang sudah ter-create sebelum throw,
+    // sehingga transaksi duplikat tetap terhitung (di SQLite produksi, write me-rollback).
+    // Yang penting: error terlihat (bukan silent overwrite) dan efek samping lain tidak tertulis.
+    expect(await count(db, 'transactions')).toBe(2);
+    expect(await count(db, 'transaction_items')).toBe(0);
+    expect(await count(db, 'payments')).toBe(0);
+    expect(await count(db, 'stock_movements')).toBe(0);
+    expect(product.stock).toBe(10);
+  });
 });

@@ -249,6 +249,14 @@ export class CheckoutService {
           raw._setRaw('last_modified', timestamp);
         });
 
+      const duplicates = await this.database
+        .get<Transaction>('transactions')
+        .query(Q.where('invoice_no', invoiceNo))
+        .fetch();
+      if (duplicates.length > 1) {
+        throw new Error(`duplikat invoice_no terdeteksi: ${invoiceNo}`);
+      }
+
       for (const item of items) {
         await this.database.get<TransactionItem>('transaction_items').create((raw) => {
           const product = productMap.get(item.productId);
