@@ -246,7 +246,41 @@
   },
   "shift": {},
   "reports": {},
-  "settings": {},
+  "settings": {
+    "groupStore": "Store",
+    "storeTitle": "Store profile",
+    "storeSubtitle": "Name, address, receipt footer",
+    "groupHardware": "Hardware",
+    "groupApp": "App",
+    "languageTitle": "Language",
+    "languageSubtitle": "Indonesia / English",
+    "groupData": "Data",
+    "backupTitle": "Backup & restore",
+    "backupSubtitle": "Cloud and manual file",
+    "printer": {
+      "title": "Printer",
+      "subtitle": "Bluetooth thermal 58mm / 80mm",
+      "defaultPrinterLabel": "Default printer",
+      "noDefault": "No printer connected. Scan to find bluetooth printers",
+      "notConnectedHint": "Not connected. Tap Connect in the list below",
+      "defaultBadge": "Default",
+      "connectedBadge": "Connected",
+      "connected": "Connected",
+      "connect": "Connect",
+      "paperWidthLabel": "Paper width",
+      "charsHint": "{{chars}} chars per line",
+      "scan": "Scan bluetooth printers",
+      "scanHint": "Tap Scan to search nearby printers",
+      "foundDevices": "Found {{count}} printers",
+      "noDevicesFound": "No printers found. Make sure bluetooth is on and the printer is powered",
+      "retry": "Retry",
+      "testPrint": "Test print",
+      "testSuccess": "Test print sent to printer",
+      "fallbackTitle": "No printer?",
+      "fallbackHint": "Receipts are still saved. Share as text when no printer is available",
+      "shareDigital": "Share digital receipt"
+    }
+  },
   "errors": {
     "checkoutFailed": "Transaction failed to save. Try again"
   }

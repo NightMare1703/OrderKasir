@@ -20,6 +20,8 @@ import { InventoryScreen } from '../features/inventory/screens/InventoryScreen';
 import { StockAdjustmentScreen } from '../features/inventory/screens/StockAdjustmentScreen';
 import { StockMovementLogScreen } from '../features/inventory/screens/StockMovementLogScreen';
 import { PlaceholderScreen } from './PlaceholderScreen';
+import { PrinterSettingsScreen } from '../features/settings/screens/PrinterSettingsScreen';
+import { SettingsScreen } from '../features/settings/screens/SettingsScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -53,16 +55,38 @@ export type HistoryStackParamList = {
   HistoryDetail: { transactionId: string };
 };
 
+export type SettingsStackParamList = {
+  SettingsMain: undefined;
+  PrinterSettings: undefined;
+};
+
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const MainTabs = createBottomTabNavigator<MainTabParamList>();
 const ProductsStack = createNativeStackNavigator<ProductsStackParamList>();
 const PosStack = createNativeStackNavigator<PosStackParamList>();
 const HistoryStack = createNativeStackNavigator<HistoryStackParamList>();
+const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
 
 // Stub layar kosong sesuai SCREENS.md peta navigasi: LoginPin → MainTabs.
 // Diganti layar sungguhan pada task masing-masing.
 const DebtsTabStub = () => <PlaceholderScreen titleKey="customers.title" />;
-const MoreTabStub = () => <PlaceholderScreen titleKey="common.more" />;
+
+const SettingsNavigator = () => (
+  <SettingsStack.Navigator
+    screenOptions={{
+      contentStyle: { backgroundColor: colors.black[900] },
+      headerStyle: { backgroundColor: colors.black[900] },
+      headerTintColor: colors.white[50],
+      headerTitleStyle: typography.heading,
+    }}>
+    <SettingsStack.Screen
+      component={SettingsScreen}
+      name="SettingsMain"
+      options={{ headerBackVisible: false, title: 'Pengaturan' }}
+    />
+    <SettingsStack.Screen component={PrinterSettingsScreen} name="PrinterSettings" />
+  </SettingsStack.Navigator>
+);
 
 const PosNavigator = () => (
   <PosStack.Navigator
@@ -162,7 +186,7 @@ const MainTabsNavigator = () => {
       />
       <MainTabs.Screen
         name="MoreTab"
-        component={MoreTabStub}
+        component={SettingsNavigator}
         options={{ tabBarLabel: t('common.more') }}
       />
     </MainTabs.Navigator>

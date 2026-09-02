@@ -250,7 +250,41 @@
   },
   "shift": {},
   "reports": {},
-  "settings": {},
+  "settings": {
+    "groupStore": "Toko",
+    "storeTitle": "Profil toko",
+    "storeSubtitle": "Nama, alamat, footer struk",
+    "groupHardware": "Perangkat",
+    "groupApp": "Aplikasi",
+    "languageTitle": "Bahasa",
+    "languageSubtitle": "Indonesia / English",
+    "groupData": "Data",
+    "backupTitle": "Backup & restore",
+    "backupSubtitle": "Cloud dan file manual",
+    "printer": {
+      "title": "Printer",
+      "subtitle": "Bluetooth thermal 58mm / 80mm",
+      "defaultPrinterLabel": "Printer default",
+      "noDefault": "Belum ada printer terhubung. Scan untuk mencari printer bluetooth",
+      "notConnectedHint": "Tidak terhubung. Ketuk Hubungkan pada daftar di bawah",
+      "defaultBadge": "Default",
+      "connectedBadge": "Terhubung",
+      "connected": "Terhubung",
+      "connect": "Hubungkan",
+      "paperWidthLabel": "Lebar kertas",
+      "charsHint": "{{chars}} karakter per baris",
+      "scan": "Scan printer bluetooth",
+      "scanHint": "Ketuk Scan untuk mencari printer di sekitar",
+      "foundDevices": "Ditemukan {{count}} printer",
+      "noDevicesFound": "Tidak ada printer ditemukan. Pastikan bluetooth aktif dan printer menyala",
+      "retry": "Coba lagi",
+      "testPrint": "Test print",
+      "testSuccess": "Test print berhasil dikirim ke printer",
+      "fallbackTitle": "Tidak ada printer?",
+      "fallbackHint": "Struk tetap tersimpan. Bagikan sebagai teks bila printer tidak tersedia",
+      "shareDigital": "Bagikan struk digital"
+    }
+  },
   "errors": {
     "checkoutFailed": "Transaksi gagal disimpan. Coba lagi"
   }

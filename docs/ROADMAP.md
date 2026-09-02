@@ -121,7 +121,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   Interface di `src/hardware/printer/` + mock; buffer builder ESC/POS 58mm/80mm murni function (testable).
   Selesai: test byte output struk contoh; mock dipakai test lain.
 
-- [ ] **T2.4 — Setup printer bluetooth + test print**
+- [x] **T2.4 — Setup printer bluetooth + test print**
   Scan/pairing dari app, simpan printer default di settings; error actionable + retry ("Printer tidak terhubung. Periksa bluetooth lalu coba lagi").
   Selesai: test print dari pengaturan; fallback share digital bila printer tidak ada.
 
