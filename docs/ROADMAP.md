@@ -117,7 +117,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   File: `src/utils/csv.ts`, `src/services/ProductImportService.ts`.
   Selesai: test parsing (baris rusak dilaporkan, tidak menggagalkan semua).
 
-- [ ] **T2.3 — Printer adapter interface + ESC/POS builder** 🧪
+- [x] **T2.3 — Printer adapter interface + ESC/POS builder** 🧪
   Interface di `src/hardware/printer/` + mock; buffer builder ESC/POS 58mm/80mm murni function (testable).
   Selesai: test byte output struk contoh; mock dipakai test lain.
 
