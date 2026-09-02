@@ -74,7 +74,10 @@
     "change": "Change",
     "print": "Print receipt",
     "share": "Share",
-    "newTransaction": "New transaction"
+    "newTransaction": "New transaction",
+    "printSuccess": "Receipt sent to printer",
+    "shareHint": "Digital receipt ready to share",
+    "printFailed": "Print failed. Try again"
   },
   "history": {
     "title": "History",
@@ -124,6 +127,11 @@
     "voidReasonHint": "Reason will be recorded in the stock log",
     "paidAt": "Time",
     "footerReprint": "Reprint receipt",
+    "shareReceipt": "Share receipt",
+    "reprint": "Reprint",
+    "reprintSuccess": "Receipt sent to printer",
+    "reprintFailed": "Print failed. Try again",
+    "sharePreviewTitle": "Digital receipt preview",
     "totalLabel": "Total"
   },
   "products": {
@@ -281,7 +289,14 @@
       "shareDigital": "Share digital receipt"
     }
   },
+  "receipt": {
+    "storeFallback": "OrderKasir",
+    "digitalShareTitle": "Digital receipt",
+    "printing": "Printing...",
+    "retry": "Retry"
+  },
   "errors": {
-    "checkoutFailed": "Transaction failed to save. Try again"
+    "checkoutFailed": "Transaction failed to save. Try again",
+    "receiptNotFound": "Receipt not found"
   }
 }

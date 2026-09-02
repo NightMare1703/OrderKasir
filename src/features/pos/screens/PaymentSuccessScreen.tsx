@@ -5,6 +5,11 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import { Alert, Share } from 'react-native';
+
+import { database } from '../../../database';
+import { MockPrinterAdapter } from '../../../hardware/printer/mockPrinterAdapter';
+import { ReceiptService } from '../../../services/ReceiptService';
 import { colors, radius, spacing, typography } from '../../../theme';
 import { formatRupiah } from '../../../utils/money';
 import type { PosStackParamList } from '../../../app/navigation';
@@ -16,7 +21,7 @@ export const PaymentSuccessScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<NavProp>();
   const route = useRoute<RoutePropType>();
-  const { invoiceNo, change, total } = route.params;
+  const { transactionId, invoiceNo, change, total } = route.params;
 
   const scale = React.useRef(new Animated.Value(0)).current;
   const opacity = React.useRef(new Animated.Value(0)).current;
@@ -36,17 +41,50 @@ export const PaymentSuccessScreen = () => {
     ]).start();
   }, [opacity, scale]);
 
+  const receiptService = React.useMemo(
+    () => new ReceiptService(database, new MockPrinterAdapter()),
+    [],
+  );
+  const [printing, setPrinting] = React.useState(false);
+  const [feedback, setFeedback] = React.useState<string | null>(null);
+
   const handleNewTransaction = React.useCallback(() => {
     navigation.navigate('PosMain');
   }, [navigation]);
 
-  const handlePrint = React.useCallback(() => {
-    // T2.3/T2.5 akan isi cetak beneran — stub untuk T1.11.
-  }, []);
+  const handlePrint = React.useCallback(async () => {
+    setPrinting(true);
+    setFeedback(null);
+    const result = await receiptService.printReceipt(transactionId);
+    setPrinting(false);
+    if (result.status === 'ok') {
+      setFeedback(t('success.printSuccess'));
+    } else if (result.status === 'not_found') {
+      setFeedback(t('errors.receiptNotFound'));
+      Alert.alert(t('success.print'), t('errors.receiptNotFound'));
+    } else {
+      setFeedback(result.message);
+      Alert.alert(t('success.print'), result.message, [
+        { text: t('receipt.retry'), onPress: () => handlePrint() },
+        { text: t('common.ok'), style: 'cancel' },
+      ]);
+    }
+  }, [receiptService, transactionId, t]);
 
-  const handleShare = React.useCallback(() => {
-    // T2.5 share digital — stub.
-  }, []);
+  const handleShare = React.useCallback(async () => {
+    setFeedback(null);
+    const text = await receiptService.buildShareText(transactionId);
+    if (!text) {
+      setFeedback(t('errors.receiptNotFound'));
+      return;
+    }
+    try {
+      await Share.share({ message: text });
+      setFeedback(t('success.shareHint'));
+    } catch {
+      setFeedback(t('success.printFailed'));
+    }
+  }, [receiptService, transactionId, t]);
 
   return (
     <View style={styles.container}>
@@ -84,11 +122,15 @@ export const PaymentSuccessScreen = () => {
       <View style={styles.actions}>
         <TouchableOpacity
           accessibilityRole="button"
+          disabled={printing}
           onPress={handlePrint}
-          style={styles.printButton}
+          style={[styles.printButton, printing && styles.buttonDisabled]}
           testID="success-print">
-          <Text style={styles.printButtonText}>{t('success.print')}</Text>
+          <Text style={styles.printButtonText}>
+            {printing ? t('receipt.printing') : t('success.print')}
+          </Text>
         </TouchableOpacity>
+        {feedback ? <Text style={styles.feedbackText}>{feedback}</Text> : null}
 
         <View style={styles.secondaryRow}>
           <TouchableOpacity
@@ -222,5 +264,13 @@ const styles = StyleSheet.create({
     ...typography.heading,
     color: colors.white[50],
     fontSize: 15,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  feedbackText: {
+    ...typography.caption,
+    color: colors.white[300],
+    textAlign: 'center',
   },
 });

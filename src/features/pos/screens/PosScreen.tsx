@@ -399,6 +399,7 @@ export const PosScreen = () => {
         useCartStore.getState().clearCart();
         setPaymentVisible(false);
         navigation.navigate('PaymentSuccess', {
+          transactionId: checkoutResult.transaction.id,
           invoiceNo: checkoutResult.invoiceNo,
           change,
           total: totals.total,

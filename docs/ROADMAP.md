@@ -125,7 +125,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   Scan/pairing dari app, simpan printer default di settings; error actionable + retry ("Printer tidak terhubung. Periksa bluetooth lalu coba lagi").
   Selesai: test print dari pengaturan; fallback share digital bila printer tidak ada.
 
-- [ ] **T2.5 — Struk render + cetak/reprint**
+- [x] **T2.5 — Struk render + cetak/reprint**
   Konten sesuai PRD §5.3 (toko, INV, kasir, item snapshot, bayar, footer custom); reprint dari riwayat.
   Selesai: struk digital bisa dibagikan teks/gambar.
 

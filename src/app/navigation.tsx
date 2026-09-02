@@ -47,7 +47,7 @@ export type ProductsStackParamList = {
 
 export type PosStackParamList = {
   PosMain: undefined;
-  PaymentSuccess: { invoiceNo: string; change: number; total: number };
+  PaymentSuccess: { transactionId: string; invoiceNo: string; change: number; total: number };
 };
 
 export type HistoryStackParamList = {

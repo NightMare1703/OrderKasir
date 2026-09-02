@@ -78,7 +78,10 @@
     "change": "Kembalian",
     "print": "Cetak struk",
     "share": "Bagikan",
-    "newTransaction": "Transaksi baru"
+    "newTransaction": "Transaksi baru",
+    "printSuccess": "Struk berhasil dikirim ke printer",
+    "shareHint": "Struk digital siap dibagikan",
+    "printFailed": "Gagal mencetak. Coba lagi"
   },
   "history": {
     "title": "Riwayat",
@@ -128,6 +131,11 @@
     "voidReasonHint": "Alasan akan tercatat di log stok",
     "paidAt": "Waktu",
     "footerReprint": "Cetak ulang struk",
+    "shareReceipt": "Bagikan struk",
+    "reprint": "Cetak ulang",
+    "reprintSuccess": "Struk berhasil dikirim ke printer",
+    "reprintFailed": "Gagal mencetak. Coba lagi",
+    "sharePreviewTitle": "Pratinjau struk digital",
     "totalLabel": "Total bayar"
   },
   "products": {
@@ -285,7 +293,14 @@
       "shareDigital": "Bagikan struk digital"
     }
   },
+  "receipt": {
+    "storeFallback": "OrderKasir",
+    "digitalShareTitle": "Struk digital",
+    "printing": "Mencetak...",
+    "retry": "Coba lagi"
+  },
   "errors": {
-    "checkoutFailed": "Transaksi gagal disimpan. Coba lagi"
+    "checkoutFailed": "Transaksi gagal disimpan. Coba lagi",
+    "receiptNotFound": "Struk tidak ditemukan"
   }
 }

@@ -3,12 +3,14 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import dayjs from 'dayjs';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { database } from '../../../database';
 import type Payment from '../../../database/models/payment';
 import type TransactionItem from '../../../database/models/transaction-item';
 import type User from '../../../database/models/user';
+import { MockPrinterAdapter } from '../../../hardware/printer/mockPrinterAdapter';
+import { ReceiptService } from '../../../services/ReceiptService';
 import { TransactionService } from '../../../services/TransactionService';
 import { colors, radius, spacing, typography } from '../../../theme';
 import { formatRupiah } from '../../../utils/money';
@@ -28,6 +30,10 @@ export const TransactionDetailScreen = ({ route, navigation }: Props) => {
   const { transactionId } = route.params;
 
   const transactionService = React.useMemo(() => new TransactionService(database), []);
+  const receiptService = React.useMemo(
+    () => new ReceiptService(database, new MockPrinterAdapter()),
+    [],
+  );
 
   const [detail, setDetail] = React.useState<ReturnType<TransactionService['getDetail']> extends Promise<infer R> ? R : never>(null as never);
   const [cashierName, setCashierName] = React.useState<string | null>(null);
@@ -40,6 +46,8 @@ export const TransactionDetailScreen = ({ route, navigation }: Props) => {
   const [voidPin, setVoidPin] = React.useState('');
   const [voidBusy, setVoidBusy] = React.useState(false);
   const [voidError, setVoidError] = React.useState<string | null>(null);
+  const [reprintBusy, setReprintBusy] = React.useState(false);
+  const [receiptFeedback, setReceiptFeedback] = React.useState<string | null>(null);
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -140,6 +148,40 @@ export const TransactionDetailScreen = ({ route, navigation }: Props) => {
       setVoidError(t('history.voidFailed'));
     }
   }, [voidReason, voidPin, selectedAdminId, transactionId, transactionService, t, load]);
+
+  const handleReprint = React.useCallback(async () => {
+    setReprintBusy(true);
+    setReceiptFeedback(null);
+    const result = await receiptService.printReceipt(transactionId);
+    setReprintBusy(false);
+    if (result.status === 'ok') {
+      setReceiptFeedback(t('history.reprintSuccess'));
+      Alert.alert(t('history.reprint'), t('history.reprintSuccess'));
+    } else if (result.status === 'not_found') {
+      setReceiptFeedback(t('errors.receiptNotFound'));
+      Alert.alert(t('history.reprint'), t('errors.receiptNotFound'));
+    } else {
+      setReceiptFeedback(result.message);
+      Alert.alert(t('history.reprint'), result.message, [
+        { text: t('receipt.retry'), onPress: () => handleReprint() },
+        { text: t('common.ok'), style: 'cancel' },
+      ]);
+    }
+  }, [receiptService, transactionId, t]);
+
+  const handleShareReceipt = React.useCallback(async () => {
+    setReceiptFeedback(null);
+    const text = await receiptService.buildShareText(transactionId);
+    if (!text) {
+      setReceiptFeedback(t('errors.receiptNotFound'));
+      return;
+    }
+    try {
+      await Share.share({ message: text });
+    } catch {
+      setReceiptFeedback(t('history.reprintFailed'));
+    }
+  }, [receiptService, transactionId, t]);
 
   if (loading) {
     return (
@@ -267,6 +309,23 @@ export const TransactionDetailScreen = ({ route, navigation }: Props) => {
             ) : null,
           )}
         </View>
+
+        <View style={styles.receiptActions}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            disabled={reprintBusy}
+            onPress={handleReprint}
+            style={[styles.reprintButton, reprintBusy && styles.buttonDisabled]}>
+            <Text style={styles.reprintButtonText}>{t('history.footerReprint')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            onPress={handleShareReceipt}
+            style={styles.shareButton}>
+            <Text style={styles.shareButtonText}>{t('history.shareReceipt')}</Text>
+          </TouchableOpacity>
+        </View>
+        {receiptFeedback ? <Text style={styles.receiptFeedback}>{receiptFeedback}</Text> : null}
 
         {!isVoid ? (
           <TouchableOpacity
@@ -533,6 +592,46 @@ const styles = StyleSheet.create({
   emptyPayments: {
     ...typography.body,
     color: colors.white[150],
+  },
+  receiptActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  reprintButton: {
+    alignItems: 'center',
+    backgroundColor: colors.orange[500],
+    borderRadius: radius.button,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  reprintButtonText: {
+    ...typography.heading,
+    color: colors.black[900],
+  },
+  shareButton: {
+    alignItems: 'center',
+    backgroundColor: colors.black[800],
+    borderColor: colors.black[600],
+    borderRadius: radius.button,
+    borderWidth: 1,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  shareButtonText: {
+    ...typography.heading,
+    color: colors.white[300],
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  receiptFeedback: {
+    ...typography.caption,
+    color: colors.white[300],
+    marginBottom: spacing.md,
+    textAlign: 'center',
   },
   voidButton: {
     alignItems: 'center',
