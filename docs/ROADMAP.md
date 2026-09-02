@@ -129,7 +129,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   Konten sesuai PRD §5.3 (toko, INV, kasir, item snapshot, bayar, footer custom); reprint dari riwayat.
   Selesai: struk digital bisa dibagikan teks/gambar.
 
-- [ ] **T2.6 — Barcode scanner adapters**
+- [x] **T2.6 — Barcode scanner adapters**
   Keyboard-wedge → field fokus + Enter = tambah ke keranjang; kamera vision-camera + ML Kit (EAN-13/EAN-8/UPC/Code128/Code39/QR).
   Selesai: scan mengisi barcode di form produk dan menambah produk di POS.
 

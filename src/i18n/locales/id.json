@@ -299,6 +299,19 @@
     "printing": "Mencetak...",
     "retry": "Coba lagi"
   },
+  "scanner": {
+    "sheetBody": "Scan barcode produk via kamera atau masukkan manual. Scanner eksternal keyboard-wedge otomatis mengisi field fokus lalu tekan Enter untuk menambah ke keranjang",
+    "supportedFormats": "Format didukung: EAN-13, EAN-8, UPC-A, UPC-E, Code128, Code39, QR",
+    "cameraPreviewPlaceholder": "Pratinjau kamera — arahkan ke barcode",
+    "scanViaCamera": "Scan via kamera",
+    "scanning": "Memindai…",
+    "orManual": "— atau ketik manual —",
+    "wedgeHint": "Scanner eksternal (USB/Bluetooth) ketik otomatis di sini; tekan Enter untuk menambah ke keranjang",
+    "cameraUnavailable": "Kamera tidak tersedia. Masukkan barcode secara manual",
+    "permissionDenied": "Izin kamera ditolak. Aktifkan di pengaturan lalu coba lagi",
+    "scanFailed": "Gagal memindai. Coba lagi atau masukkan manual",
+    "noResult": "Tidak ada barcode terdeteksi. Ketik manual lalu tekan Cari"
+  },
   "errors": {
     "checkoutFailed": "Transaksi gagal disimpan. Coba lagi",
     "receiptNotFound": "Struk tidak ditemukan"

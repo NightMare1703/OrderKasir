@@ -28,6 +28,7 @@ import {
   calculateItemDiscountAmount,
   useCartStore,
 } from '../cartStore';
+import { normalizeBarcode } from '../../../hardware/scanner/barcode';
 import { BarcodeScannerStubSheet } from '../../products/components/BarcodeScannerStubSheet';
 import { CartPanel } from '../components/CartPanel';
 import { PaymentSheet, PaymentSheetResult } from '../components/PaymentSheet';
@@ -314,11 +315,31 @@ export const PosScreen = () => {
   }, [navigation]);
 
   const handleScanSubmit = React.useCallback(
-    (barcode: string) => {
+    (rawBarcode: string) => {
+      const barcode = normalizeBarcode(rawBarcode);
       setScanVisible(false);
+      if (!barcode) {
+        return;
+      }
+      const currentProducts = products ?? [];
+      const match = currentProducts.find((p) => p.barcode === barcode && p.isActive);
+      if (match) {
+        addItem(
+          {
+            id: match.id,
+            name: match.name,
+            unit: match.unit,
+            customUnitLabel: match.customUnitLabel,
+            sellPrice: match.sellPrice,
+          },
+          1,
+        );
+        setQuery('');
+        return;
+      }
       setQuery(barcode);
     },
-    [],
+    [addItem, products],
   );
 
   const handleScanCancel = React.useCallback(() => {
@@ -328,6 +349,28 @@ export const PosScreen = () => {
   const handleOpenScan = React.useCallback(() => {
     setScanVisible(true);
   }, []);
+
+  const handleSearchSubmit = React.useCallback(() => {
+    const barcode = normalizeBarcode(query);
+    if (!barcode) {
+      return;
+    }
+    const currentProducts = products ?? [];
+    const match = currentProducts.find((p) => p.barcode === barcode && p.isActive);
+    if (match) {
+      addItem(
+        {
+          id: match.id,
+          name: match.name,
+          unit: match.unit,
+          customUnitLabel: match.customUnitLabel,
+          sellPrice: match.sellPrice,
+        },
+        1,
+      );
+      setQuery('');
+    }
+  }, [addItem, products, query]);
 
   const handlePayPress = React.useCallback(() => {
     setPaymentVisible(true);
@@ -426,9 +469,12 @@ export const PosScreen = () => {
     <View style={styles.container}>
       <View style={styles.searchRow}>
         <TextInput
+          autoFocus={false}
           onChangeText={handleQueryChange}
+          onSubmitEditing={handleSearchSubmit}
           placeholder={t('pos.searchPlaceholder')}
           placeholderTextColor={colors.white[150]}
+          returnKeyType="search"
           style={styles.searchInput}
           value={query}
         />

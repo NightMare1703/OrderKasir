@@ -295,6 +295,19 @@
     "printing": "Printing...",
     "retry": "Retry"
   },
+  "scanner": {
+    "sheetBody": "Scan product barcode via camera or enter manually. External keyboard-wedge scanners auto-fill the focused field then press Enter to add to cart",
+    "supportedFormats": "Supported formats: EAN-13, EAN-8, UPC-A, UPC-E, Code128, Code39, QR",
+    "cameraPreviewPlaceholder": "Camera preview — point at the barcode",
+    "scanViaCamera": "Scan via camera",
+    "scanning": "Scanning…",
+    "orManual": "— or type manually —",
+    "wedgeHint": "External (USB/Bluetooth) scanners type automatically here; press Enter to add to cart",
+    "cameraUnavailable": "Camera not available. Enter barcode manually",
+    "permissionDenied": "Camera permission denied. Enable in settings and try again",
+    "scanFailed": "Scan failed. Try again or enter manually",
+    "noResult": "No barcode detected. Type manually then press Search"
+  },
   "errors": {
     "checkoutFailed": "Transaction failed to save. Try again",
     "receiptNotFound": "Receipt not found"
