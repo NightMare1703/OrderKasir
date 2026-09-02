@@ -2,11 +2,15 @@ import { Database } from '@nozbe/watermelondb';
 import LokiJSAdapter from '@nozbe/watermelondb/adapters/lokijs';
 import logger from '@nozbe/watermelondb/utils/common/logger';
 
+import CashDrawerPull from '../../database/models/cash-drawer-pull';
 import Category from '../../database/models/category';
 import Customer from '../../database/models/customer';
+import Debt from '../../database/models/debt';
+import DebtPayment from '../../database/models/debt-payment';
 import Payment from '../../database/models/payment';
 import Product from '../../database/models/product';
 import Setting from '../../database/models/setting';
+import Shift from '../../database/models/shift';
 import StockMovement from '../../database/models/stock-movement';
 import Transaction from '../../database/models/transaction';
 import TransactionItem from '../../database/models/transaction-item';
@@ -26,11 +30,15 @@ const makeDb = () => {
   return new Database({
     adapter,
     modelClasses: [
+      CashDrawerPull,
       Category,
       Customer,
+      Debt,
+      DebtPayment,
       Payment,
       Product,
       Setting,
+      Shift,
       StockMovement,
       Transaction,
       TransactionItem,

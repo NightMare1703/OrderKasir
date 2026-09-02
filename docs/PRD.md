@@ -228,12 +228,35 @@ Format: *Sebagai [peran], saya ingin [aksi], sehingga [manfaat].*
 
 ### 5.7 Piutang / Kas Bon Pelanggan
 
-- Master pelanggan: nama, no. HP (opsional), catatan.
-- Buat bon dari layar pembayaran (keranjang → bon) atau bon manual.
-- Pelunasan parsial/penuh dengan metode pembayaran apa pun; setiap pembayaran tercatat (tanggal, jumlah, metode, kasir, shift).
-- Dashboard piutang: total piutang beredar, daftar per pelanggan, filter jatuh tempo.
-- Pengingat lokal (local notification) untuk bon jatuh tempo hari ini (opsional, default on).
-- Batas plafon bon per pelanggan (opsional) — warning jika melebihi.
+**Master pelanggan**
+- Field: `name` wajib (1–100 char, trim), `phone` opsional (max 20 char, trim, `null` jika kosong), `note` opsional, `debt_limit` opsional integer rupiah ≥ 0 (plafon bon). Validasi di `CustomerService`; `phone`/`note` kosong dinormalisasi ke `null`.
+
+**Pembuatan bon — hanya via keranjang → bon (v1)**
+- Di layar pembayaran kasir pilih pelanggan (search nama / buat inline) → checkout dengan `status='debt'` → sistem membuat `debts` secara **atomik dalam satu DB transaction** bersama `transactions` + `transaction_items` + `payments` (jika ada uang muka) + `stock_movements` + update `products.stock` (lihat §7.4.3 butir 3).
+- Baris `debts` yang dibuat: `transaction_id` (UNIQUE, FK → `transactions.id` berstatus `debt`), `customer_id`, `total_amount = transactions.total`, `paid_amount = 0`, `status = 'open'`, `due_date = null` (diisi belakangan via update jika perlu).
+- Frasa "bon manual" di versi sebelumnya tidak didukung sebagai `debts` standalone di v1; jika dibutuhkan, tetap harus membuat transaksi bon (tidak ada debt tanpa transaksi) — ditunda ke v1.1. Dengan demikian setiap `debts` selalu berpasangan 1–0..1 dengan `transactions` berstatus `debt`.
+
+**Semantik pembayaran awal (uang muka) saat bon**
+- Checkout bon mengizinkan `paymentsTotal <= total` (uang muka parsial, max 3 metode, struktur `method/amount/reference` sama dengan §5.6). Uang muka dicatat di `payments` dan ikut `expected_cash` shift sebagai `cashSales` (bukan `cashDebtPayments`).
+- Untuk menjaga invariant `debts.paid_amount = SUM(debt_payments.amount)` (§7.4.3 butir 6), `debts.paid_amount` awal tetap `0` dan `total` tetap penuh (`outstanding awal = total`), meskipun ada uang muka. Pelunasan sisa hanya via `debt_payments`; tidak diduplikasi ke `debt_payments` saat checkout agar tidak double-count di `ShiftService.computeExpectedCash`.
+
+**Status & invariant**
+- `debts.status` ∈ `open` (`paid == 0`), `partial` (`0 < paid < total`), `paid` (`paid == total`). Transisi hanya maju via `DebtService.recordPayment`; tidak ada edit manual `paid_amount`.
+- Invariant: `debts.paid_amount` selalu `= SUM(debt_payments.amount WHERE debt_id = ? AND deleted = false)`. Diverifikasi oleh `DebtService.verifyIntegrity()` dan saat tutup shift. `debt_payments` bersifat insert-only; overpayment (`amount > remaining = total - paid`) ditolak dengan `amount_exceeds_remaining`. Debt berstatus `paid` menolak pembayaran lebih lanjut (`already_paid`).
+
+**Pelunasan**
+- Parsial/penuh dengan metode apapun (`cash`/`qris`/`debit`/`transfer` sesuai §5.6) + `reference` opsional. Setiap `debt_payments` mencatat `debt_id`, `amount` (integer > 0), `method`, `reference`, `user_id` (kasir penerima, harus `is_active`), `shift_id` (shift aktif saat pelunasan), `paid_at`/`created_at`/`updated_at`/`last_modified`/`deleted` (soft-delete).
+- Penulisan `debt_payments` + update `debts` (`paid_amount`, `status`, `last_modified`) terjadi dalam satu `database.write` atomik. Pembayaran `cash` ikut hitungan `expected_cash` shift sebagai `cashDebtPayments` (`ShiftService`).
+
+**Plafon bon (`debt_limit`) — warning non-blocking**
+- Jika `customers.debt_limit` `!= null`, saat `DebtService.createDebt` hitung `outstanding_sebelum = SUM(total - paid WHERE customer_id = ? AND status != 'paid' AND deleted = false)` dan `projected = outstanding_sebelum + total_baru`. Jika `projected > debt_limit`, kembalikan `warnings: [{customerId, limit, outstanding: outstanding_sebelum, projected}]` untuk UI tampil warning merah/plafon, tapi bon tetap dibuat (tidak memblokir). Prinsip: warung tetap bisa jual, owner diberi sinyal risiko. Cek yang sama tersedia via `willExceedDebtLimit()` sebelum checkout untuk preview.
+
+**Jatuh tempo & dashboard**
+- `debts.due_date` nullable epoch ms, opsional saat buat bon atau update berikutnya; dipakai filter jatuh tempo dan badge `red.500` bila `due_date <= hari ini` serta pengingat lokal.
+- Dashboard piutang (T3.4): `total beredar = SUM(total - paid WHERE status != 'paid')`, daftar per pelanggan (nama, HP, total beredar), filter `due_today`/`overdue`, sort `due_date`.
+
+**Pengingat lokal**
+- Local notification untuk bon dengan `due_date` hari ini, default `on`, tidak butuh network, dijadwalkan harian (implementasi T3.4).
 
 ### 5.8 Laporan & Analitik
 

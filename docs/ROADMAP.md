@@ -146,7 +146,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   Buka: modal awal; tutup: input setoran fisik → rekap transparan (per metode, diskon, void, selisih merah/hijau + label + icon); admin lihat riwayat selisih per kasir.
   Selesai: US-02/US-03 terpenuhi end-to-end.
 
-- [ ] **T3.3 — Customers & DebtService** 🧪
+- [x] **T3.3 — Customers & DebtService** 🧪
   Master pelanggan (nama, HP opsional, catatan, plafon bon opsional → warning jika lewat); pembayaran parsial/penuh; status transition `open → partial → paid`.
   File: `src/services/DebtService.ts`, model `customer`, `debt`, `debt-payment`.
   Selesai: test transitions; `paid_amount` = SUM(debt_payments) diverifikasi.

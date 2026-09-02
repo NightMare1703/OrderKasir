@@ -1,5 +1,6 @@
 import { Database, Q } from '@nozbe/watermelondb';
 
+import Debt from '../database/models/debt';
 import Payment, { PaymentMethod } from '../database/models/payment';
 import Product from '../database/models/product';
 import StockMovement from '../database/models/stock-movement';
@@ -317,6 +318,25 @@ export class CheckoutService {
         await product.update((raw) => {
           raw.stock = stockAfter;
           raw.updatedAt = timestamp;
+          raw._setRaw('last_modified', timestamp);
+        });
+      }
+
+      // Debt dibuat atomik bersama transaksi (PRD §7.4.3 butir 3): transaction
+      // + items + payments + debts + stock movements + stock update dalam satu
+      // write. Jika status debt, buat baris debts dengan total = total transaksi,
+      // paidAmount awal 0 (pelunasan dicatat terpisah via DebtService).
+      if (status === 'debt') {
+        await this.database.get<Debt>('debts').create((raw) => {
+          raw.transactionId = createdTransaction!.id;
+          raw.customerId = customerId!;
+          raw.totalAmount = total;
+          raw.paidAmount = 0;
+          raw.dueDate = null;
+          raw.status = 'open';
+          raw.createdAt = timestamp;
+          raw.updatedAt = timestamp;
+          raw._setRaw('deleted', false);
           raw._setRaw('last_modified', timestamp);
         });
       }
