@@ -2,7 +2,7 @@ import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 import { withSyncColumns } from './conventions';
 
-export const DATABASE_SCHEMA_VERSION = 6;
+export const DATABASE_SCHEMA_VERSION = 7;
 
 // v1 masih pra-rilis: users & settings dimasukkan langsung ke v1 (belum ada
 // instalasi produksi, jadi tidak melanggar aturan append-only migrations).
@@ -11,6 +11,7 @@ export const DATABASE_SCHEMA_VERSION = 6;
 // v4: stock_movements audit trail (T1.4).
 // v5: transactions, transaction_items, payments (T1.8).
 // v6: customers (T1.10 - needed for kas bon).
+// v7: shifts, cash_drawer_pulls, debts, debt_payments (T3.1/T3.3).
 export const appDatabaseSchema = appSchema({
   version: DATABASE_SCHEMA_VERSION,
   tables: [
@@ -132,6 +133,60 @@ export const appDatabaseSchema = appSchema({
         { name: 'amount', type: 'number' },
         { name: 'reference', type: 'string', isOptional: true },
         { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
+      ]),
+    }),
+    tableSchema({
+      name: 'shifts',
+      columns: withSyncColumns([
+        { name: 'user_id', type: 'string', isIndexed: true },
+        { name: 'opened_at', type: 'number', isIndexed: true },
+        { name: 'closed_at', type: 'number', isOptional: true },
+        { name: 'opening_cash', type: 'number' },
+        { name: 'closing_cash', type: 'number', isOptional: true },
+        { name: 'expected_cash', type: 'number', isOptional: true },
+        { name: 'difference', type: 'number', isOptional: true },
+        { name: 'status', type: 'string', isIndexed: true },
+        { name: 'notes', type: 'string', isOptional: true },
+        { name: 'created_at', type: 'number', isIndexed: true },
+        { name: 'updated_at', type: 'number' },
+      ]),
+    }),
+    tableSchema({
+      name: 'cash_drawer_pulls',
+      columns: withSyncColumns([
+        { name: 'shift_id', type: 'string', isIndexed: true },
+        { name: 'amount', type: 'number' },
+        { name: 'reason', type: 'string', isOptional: true },
+        { name: 'user_id', type: 'string', isIndexed: true },
+        { name: 'created_at', type: 'number', isIndexed: true },
+        { name: 'updated_at', type: 'number' },
+      ]),
+    }),
+    tableSchema({
+      name: 'debts',
+      columns: withSyncColumns([
+        { name: 'transaction_id', type: 'string', isIndexed: true },
+        { name: 'customer_id', type: 'string', isIndexed: true },
+        { name: 'total_amount', type: 'number' },
+        { name: 'paid_amount', type: 'number' },
+        { name: 'due_date', type: 'number', isOptional: true },
+        { name: 'status', type: 'string', isIndexed: true },
+        { name: 'created_at', type: 'number', isIndexed: true },
+        { name: 'updated_at', type: 'number' },
+      ]),
+    }),
+    tableSchema({
+      name: 'debt_payments',
+      columns: withSyncColumns([
+        { name: 'debt_id', type: 'string', isIndexed: true },
+        { name: 'amount', type: 'number' },
+        { name: 'method', type: 'string', isIndexed: true },
+        { name: 'reference', type: 'string', isOptional: true },
+        { name: 'user_id', type: 'string', isIndexed: true },
+        { name: 'shift_id', type: 'string', isIndexed: true },
+        { name: 'paid_at', type: 'number', isIndexed: true },
+        { name: 'created_at', type: 'number', isIndexed: true },
         { name: 'updated_at', type: 'number' },
       ]),
     }),

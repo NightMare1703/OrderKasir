@@ -130,9 +130,68 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 7,
+      steps: [
+        createTable({
+          name: 'shifts',
+          columns: withSyncColumns([
+            { name: 'user_id', type: 'string', isIndexed: true },
+            { name: 'opened_at', type: 'number', isIndexed: true },
+            { name: 'closed_at', type: 'number', isOptional: true },
+            { name: 'opening_cash', type: 'number' },
+            { name: 'closing_cash', type: 'number', isOptional: true },
+            { name: 'expected_cash', type: 'number', isOptional: true },
+            { name: 'difference', type: 'number', isOptional: true },
+            { name: 'status', type: 'string', isIndexed: true },
+            { name: 'notes', type: 'string', isOptional: true },
+            { name: 'created_at', type: 'number', isIndexed: true },
+            { name: 'updated_at', type: 'number' },
+          ]),
+        }),
+        createTable({
+          name: 'cash_drawer_pulls',
+          columns: withSyncColumns([
+            { name: 'shift_id', type: 'string', isIndexed: true },
+            { name: 'amount', type: 'number' },
+            { name: 'reason', type: 'string', isOptional: true },
+            { name: 'user_id', type: 'string', isIndexed: true },
+            { name: 'created_at', type: 'number', isIndexed: true },
+            { name: 'updated_at', type: 'number' },
+          ]),
+        }),
+        createTable({
+          name: 'debts',
+          columns: withSyncColumns([
+            { name: 'transaction_id', type: 'string', isIndexed: true },
+            { name: 'customer_id', type: 'string', isIndexed: true },
+            { name: 'total_amount', type: 'number' },
+            { name: 'paid_amount', type: 'number' },
+            { name: 'due_date', type: 'number', isOptional: true },
+            { name: 'status', type: 'string', isIndexed: true },
+            { name: 'created_at', type: 'number', isIndexed: true },
+            { name: 'updated_at', type: 'number' },
+          ]),
+        }),
+        createTable({
+          name: 'debt_payments',
+          columns: withSyncColumns([
+            { name: 'debt_id', type: 'string', isIndexed: true },
+            { name: 'amount', type: 'number' },
+            { name: 'method', type: 'string', isIndexed: true },
+            { name: 'reference', type: 'string', isOptional: true },
+            { name: 'user_id', type: 'string', isIndexed: true },
+            { name: 'shift_id', type: 'string', isIndexed: true },
+            { name: 'paid_at', type: 'number', isIndexed: true },
+            { name: 'created_at', type: 'number', isIndexed: true },
+            { name: 'updated_at', type: 'number' },
+          ]),
+        }),
+      ],
+    },
   ],
 });
 
 export const migrationEvents = {
-  currentVersion: 6,
+  currentVersion: 7,
 };

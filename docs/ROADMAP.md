@@ -137,7 +137,7 @@ Legend: 🧪 = wajib ada unit test Jest.
 
 ## Fase 3 — Bisnis & Data
 
-- [ ] **T3.1 — ShiftService open/close** 🧪
+- [x] **T3.1 — ShiftService open/close** 🧪
   Formula: expected_cash = opening_cash + penjualan tunai + pelunasan bon tunai − drawer pull; selisih = closing_cash − expected_cash; max 1 shift open per device.
   File: `src/services/ShiftService.ts`, model `shift`.
   Selesai: test formula termasuk drawer pull & pelunasan bon; constraint 1 shift aktif.
