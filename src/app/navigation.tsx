@@ -22,6 +22,10 @@ import { StockMovementLogScreen } from '../features/inventory/screens/StockMovem
 import { PlaceholderScreen } from './PlaceholderScreen';
 import { PrinterSettingsScreen } from '../features/settings/screens/PrinterSettingsScreen';
 import { SettingsScreen } from '../features/settings/screens/SettingsScreen';
+import { OpenShiftScreen } from '../features/shifts/screens/OpenShiftScreen';
+import { CloseShiftScreen } from '../features/shifts/screens/CloseShiftScreen';
+import { ShiftRecapScreen } from '../features/shifts/screens/ShiftRecapScreen';
+import { ShiftHistoryScreen } from '../features/shifts/screens/ShiftHistoryScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -58,6 +62,10 @@ export type HistoryStackParamList = {
 export type SettingsStackParamList = {
   SettingsMain: undefined;
   PrinterSettings: undefined;
+  ShiftHistory: undefined;
+  ShiftRecap: { shiftId: string };
+  OpenShift: undefined;
+  CloseShift: { shiftId: string };
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -85,6 +93,26 @@ const SettingsNavigator = () => (
       options={{ headerBackVisible: false, title: 'Pengaturan' }}
     />
     <SettingsStack.Screen component={PrinterSettingsScreen} name="PrinterSettings" />
+    <SettingsStack.Screen
+      component={ShiftHistoryScreen}
+      name="ShiftHistory"
+      options={{ title: 'Riwayat Shift' }}
+    />
+    <SettingsStack.Screen
+      component={ShiftRecapScreen}
+      name="ShiftRecap"
+      options={{ title: 'Rekap Shift' }}
+    />
+    <SettingsStack.Screen
+      component={OpenShiftScreen}
+      name="OpenShift"
+      options={{ title: 'Buka Shift' }}
+    />
+    <SettingsStack.Screen
+      component={CloseShiftScreen}
+      name="CloseShift"
+      options={{ title: 'Tutup Shift' }}
+    />
   </SettingsStack.Navigator>
 );
 

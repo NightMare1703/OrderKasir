@@ -142,7 +142,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   File: `src/services/ShiftService.ts`, model `shift`.
   Selesai: test formula termasuk drawer pull & pelunasan bon; constraint 1 shift aktif.
 
-- [ ] **T3.2 — Layar shift: buka, tutup, rekap, history**
+- [x] **T3.2 — Layar shift: buka, tutup, rekap, history**
   Buka: modal awal; tutup: input setoran fisik → rekap transparan (per metode, diskon, void, selisih merah/hijau + label + icon); admin lihat riwayat selisih per kasir.
   Selesai: US-02/US-03 terpenuhi end-to-end.
 

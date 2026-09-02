@@ -2,9 +2,10 @@ import { Database, Q } from '@nozbe/watermelondb';
 
 import CashDrawerPull from '../database/models/cash-drawer-pull';
 import DebtPayment from '../database/models/debt-payment';
-import Payment from '../database/models/payment';
+import Payment, { PaymentMethod } from '../database/models/payment';
 import Shift, { ShiftStatus } from '../database/models/shift';
 import Transaction from '../database/models/transaction';
+import TransactionItem from '../database/models/transaction-item';
 import User from '../database/models/user';
 
 export type { ShiftStatus };
@@ -49,6 +50,20 @@ export type DrawerPullResult =
   | { status: 'shift_already_closed'; shiftId: string }
   | { status: 'user_not_found'; userId: string }
   | { status: 'invalid_amount' };
+
+export type ShiftSummary = {
+  shift: Shift;
+  transactionCount: number;
+  voidCount: number;
+  totalSales: number;
+  discountTotal: number;
+  taxTotal: number;
+  breakdown: Record<PaymentMethod, number>;
+  cashSales: number;
+  cashDebtPayments: number;
+  drawerPullTotal: number;
+  expectedCash: number;
+};
 
 const normalizeOptionalText = (value: string | null | undefined): string | null => {
   if (value == null) {
@@ -221,6 +236,11 @@ export class ShiftService {
   }
 
   async computeExpectedCash(shiftId: string): Promise<number> {
+    const summary = await this.getShiftSummary(shiftId);
+    return summary.expectedCash;
+  }
+
+  async getShiftSummary(shiftId: string): Promise<ShiftSummary> {
     const shift = await this.getShiftById(shiftId);
     if (!shift) {
       throw new Error(`shift tidak ditemukan: ${shiftId}`);
@@ -233,21 +253,49 @@ export class ShiftService {
       .query(Q.where('shift_id', shiftId), Q.where('deleted', false))
       .fetch();
 
-    const validTransactionIds = transactions
-      .filter((trx) => trx.status !== 'void')
-      .map((trx) => trx.id);
+    const nonVoid = transactions.filter((trx) => trx.status !== 'void');
+    const validIds = nonVoid.map((trx) => trx.id);
+    const voidCount = transactions.length - nonVoid.length;
+    const transactionCount = nonVoid.length;
 
+    let totalSales = 0;
+    let discountFromTransactions = 0;
+    let taxTotal = 0;
+    for (const trx of nonVoid) {
+      totalSales += trx.total;
+      discountFromTransactions += trx.discount;
+      taxTotal += trx.tax;
+    }
+
+    let discountFromItems = 0;
+    if (validIds.length > 0) {
+      const items = await this.database
+        .get<TransactionItem>('transaction_items')
+        .query(Q.where('transaction_id', Q.oneOf(validIds)), Q.where('deleted', false))
+        .fetch();
+      discountFromItems = items.reduce((sum, item) => sum + item.discount, 0);
+    }
+    const discountTotal = discountFromTransactions + discountFromItems;
+
+    const breakdown: Record<PaymentMethod, number> = {
+      cash: 0,
+      qris: 0,
+      debit: 0,
+      transfer: 0,
+    };
     let cashSales = 0;
-    if (validTransactionIds.length > 0) {
+    if (validIds.length > 0) {
       const payments = await this.database
         .get<Payment>('payments')
-        .query(
-          Q.where('method', 'cash'),
-          Q.where('deleted', false),
-          Q.where('transaction_id', Q.oneOf(validTransactionIds)),
-        )
+        .query(Q.where('deleted', false), Q.where('transaction_id', Q.oneOf(validIds)))
         .fetch();
-      cashSales = payments.reduce((sum, payment) => sum + payment.amount, 0);
+      for (const payment of payments) {
+        const method = payment.method as PaymentMethod;
+        if (method in breakdown) {
+          breakdown[method] += payment.amount;
+        }
+      }
+      cashSales = breakdown.cash;
     }
 
     let cashDebtPayments = 0;
@@ -272,7 +320,21 @@ export class ShiftService {
       drawerPullTotal = 0;
     }
 
-    return openingCash + cashSales + cashDebtPayments - drawerPullTotal;
+    const expectedCash = openingCash + cashSales + cashDebtPayments - drawerPullTotal;
+
+    return {
+      shift,
+      transactionCount,
+      voidCount,
+      totalSales,
+      discountTotal,
+      taxTotal,
+      breakdown,
+      cashSales,
+      cashDebtPayments,
+      drawerPullTotal,
+      expectedCash,
+    };
   }
 
   private async findActiveUser(userId: string): Promise<User | null> {

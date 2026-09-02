@@ -1,10 +1,14 @@
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import { database } from '../../../database';
+import type Shift from '../../../database/models/shift';
+import { ShiftService } from '../../../services/ShiftService';
 import { colors, radius, spacing, typography } from '../../../theme';
+import { formatRupiah } from '../../../utils/money';
 import type { SettingsStackParamList } from '../../../app/navigation';
 
 type ItemProps = {
@@ -26,9 +30,65 @@ const SettingsItem = ({ title, subtitle, onPress }: ItemProps) => (
 export const SettingsScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList>>();
+  const shiftService = React.useMemo(() => new ShiftService(database), []);
+  const [activeShift, setActiveShift] = React.useState<Shift | null>(null);
+
+  const loadActive = React.useCallback(async () => {
+    const active = await shiftService.getActiveShift();
+    setActiveShift(active);
+  }, [shiftService]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadActive();
+    }, [loadActive]),
+  );
+
+  React.useEffect(() => {
+    loadActive();
+  }, [loadActive]);
+
+  const handleShiftPrimary = React.useCallback(() => {
+    if (activeShift) {
+      navigation.navigate('CloseShift', { shiftId: activeShift.id });
+    } else {
+      navigation.navigate('OpenShift');
+    }
+  }, [activeShift, navigation]);
 
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.container}>
+      <View style={styles.group}>
+        <Text style={styles.groupLabel}>{t('shift.title')}</Text>
+        <View style={styles.groupCard}>
+          <SettingsItem
+            subtitle={
+              activeShift
+                ? `${t('shift.activeLabel')} · ${formatRupiah(activeShift.openingCash)}`
+                : t('shift.noActive')
+            }
+            title={activeShift ? t('shift.closeTitle') : t('shift.openTitle')}
+            onPress={handleShiftPrimary}
+          />
+          <View style={styles.divider} />
+          <SettingsItem
+            subtitle={t('shift.tapToDetail')}
+            title={t('shift.historyTitle')}
+            onPress={() => navigation.navigate('ShiftHistory')}
+          />
+          {activeShift ? (
+            <>
+              <View style={styles.divider} />
+              <SettingsItem
+                subtitle={`${t('shift.openedAt')} ${activeShift.openingCash ? formatRupiah(activeShift.openingCash) : ''}`}
+                title={t('shift.recapTitle')}
+                onPress={() => navigation.navigate('ShiftRecap', { shiftId: activeShift.id })}
+              />
+            </>
+          ) : null}
+        </View>
+      </View>
+
       <View style={styles.group}>
         <Text style={styles.groupLabel}>{t('settings.groupStore')}</Text>
         <View style={styles.groupCard}>
@@ -126,5 +186,9 @@ const styles = StyleSheet.create({
   itemChevron: {
     ...typography.title,
     color: colors.white[150],
+  },
+  divider: {
+    backgroundColor: colors.black[600],
+    height: 1,
   },
 });

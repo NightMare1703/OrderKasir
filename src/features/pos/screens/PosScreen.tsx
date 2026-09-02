@@ -19,6 +19,7 @@ import type Customer from '../../../database/models/customer';
 import { CheckoutService } from '../../../services/CheckoutService';
 import { CustomerService } from '../../../services/CustomerService';
 import { ProductService, matchesProductName } from '../../../services/ProductService';
+import { ShiftService } from '../../../services/ShiftService';
 import { colors, radius, spacing, typography } from '../../../theme';
 import { formatRupiah } from '../../../utils/money';
 import { useSessionStore } from '../../auth/sessionStore';
@@ -32,10 +33,6 @@ import { normalizeBarcode } from '../../../hardware/scanner/barcode';
 import { BarcodeScannerStubSheet } from '../../products/components/BarcodeScannerStubSheet';
 import { CartPanel } from '../components/CartPanel';
 import { PaymentSheet, PaymentSheetResult } from '../components/PaymentSheet';
-
-// T3.1 (ShiftService) akan menyediakan id shift aktif; sampai gate BukaShift
-// (T3.2) ada, checkout memakai placeholder yang sama dengan skema uji T1.8.
-const SHIFT_PLACEHOLDER_ID = 'shift-1';
 
 const customerService = new CustomerService(database);
 
@@ -209,6 +206,7 @@ export const PosScreen = () => {
 
   const productService = React.useMemo(() => new ProductService(database), []);
   const checkoutService = React.useMemo(() => new CheckoutService(database), []);
+  const shiftService = React.useMemo(() => new ShiftService(database), []);
 
   const [products, setProducts] = React.useState<Product[] | null>(null);
   const [categories, setCategories] = React.useState<Category[]>([]);
@@ -217,6 +215,7 @@ export const PosScreen = () => {
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null);
   const [scanVisible, setScanVisible] = React.useState(false);
   const [paymentVisible, setPaymentVisible] = React.useState(false);
+  const [activeShiftId, setActiveShiftId] = React.useState<string | null>(null);
 
   const addItem = useCartStore((state) => state.addItem);
   const cartItems = useCartStore((state) => state.items);
@@ -228,15 +227,17 @@ export const PosScreen = () => {
   );
 
   const load = React.useCallback(async () => {
-    const [allProducts, allCategories, allCustomers] = await Promise.all([
+    const [allProducts, allCategories, allCustomers, activeShift] = await Promise.all([
       productService.listProducts(),
       productService.listCategories(),
       customerService.listCustomers(),
+      shiftService.getActiveShift(),
     ]);
     setProducts(allProducts);
     setCategories(allCategories);
     setCustomers(allCustomers);
-  }, [productService]);
+    setActiveShiftId(activeShift ? activeShift.id : null);
+  }, [productService, shiftService]);
 
   React.useEffect(() => {
     load();
@@ -373,8 +374,18 @@ export const PosScreen = () => {
   }, [addItem, products, query]);
 
   const handlePayPress = React.useCallback(() => {
+    if (activeShiftId === null) {
+      const parent = navigation.getParent();
+      if (parent) {
+        (parent as unknown as { navigate: (name: string, params?: unknown) => void }).navigate(
+          'MoreTab',
+          { screen: 'OpenShift' } as unknown as undefined,
+        );
+      }
+      return;
+    }
     setPaymentVisible(true);
-  }, []);
+  }, [activeShiftId, navigation]);
 
   const handleClosePayment = React.useCallback(() => {
     setPaymentVisible(false);
@@ -425,8 +436,13 @@ export const PosScreen = () => {
         }));
       }
 
+      const active = await shiftService.getActiveShift();
+      const shiftId = active ? active.id : activeShiftId;
+      if (!shiftId) {
+        return false;
+      }
       const checkoutResult = await checkoutService.checkout({
-        shiftId: SHIFT_PLACEHOLDER_ID,
+        shiftId,
         userId: currentUserId,
         customerId,
         items,
@@ -451,7 +467,7 @@ export const PosScreen = () => {
       }
       return false;
     },
-    [checkoutService, navigation],
+    [activeShiftId, checkoutService, navigation, shiftService],
   );
 
   const handleQueryChange = React.useCallback((value: string) => {
@@ -467,6 +483,15 @@ export const PosScreen = () => {
 
   return (
     <View style={styles.container}>
+      {activeShiftId === null ? (
+        <View style={styles.shiftGateBanner}>
+          <View style={styles.shiftGateDot} />
+          <Text style={styles.shiftGateText}>{t('shift.openGateHint')}</Text>
+          <TouchableOpacity onPress={handlePayPress} style={styles.shiftGateButton}>
+            <Text style={styles.shiftGateButtonText}>{t('shift.openGateAction')}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
       <View style={styles.searchRow}>
         <TextInput
           autoFocus={false}
@@ -535,6 +560,38 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.black[900],
     flex: 1,
+  },
+  shiftGateBanner: {
+    alignItems: 'center',
+    backgroundColor: colors.black[800],
+    borderBottomColor: colors.black[600],
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  shiftGateDot: {
+    backgroundColor: colors.yellow[400],
+    borderRadius: 4,
+    height: 8,
+    width: 8,
+  },
+  shiftGateText: {
+    ...typography.caption,
+    color: colors.white[300],
+    flex: 1,
+  },
+  shiftGateButton: {
+    backgroundColor: colors.orange[500],
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  shiftGateButtonText: {
+    ...typography.caption,
+    color: colors.white[50],
+    fontWeight: '600',
   },
   searchRow: {
     flexDirection: 'row',
