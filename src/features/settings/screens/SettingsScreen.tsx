@@ -6,7 +6,10 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 
 import { database } from '../../../database';
 import type Shift from '../../../database/models/shift';
+import { SettingsService } from '../../../services/SettingsService';
 import { ShiftService } from '../../../services/ShiftService';
+import { UserService } from '../../../services/UserService';
+import { useSessionStore } from '../../auth/sessionStore';
 import { colors, radius, spacing, typography } from '../../../theme';
 import { formatRupiah } from '../../../utils/money';
 import type { SettingsStackParamList } from '../../../app/navigation';
@@ -28,25 +31,42 @@ const SettingsItem = ({ title, subtitle, onPress }: ItemProps) => (
 );
 
 export const SettingsScreen = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList>>();
   const shiftService = React.useMemo(() => new ShiftService(database), []);
-  const [activeShift, setActiveShift] = React.useState<Shift | null>(null);
+  const settingsService = React.useMemo(() => new SettingsService(database), []);
+  const userService = React.useMemo(() => new UserService(database), []);
+  const currentUserId = useSessionStore((s) => s.currentUserId);
 
-  const loadActive = React.useCallback(async () => {
+  const [activeShift, setActiveShift] = React.useState<Shift | null>(null);
+  const [storeName, setStoreName] = React.useState<string | null>(null);
+  const [language, setLanguage] = React.useState<string>(i18n.language);
+  const [isAdmin, setIsAdmin] = React.useState(false);
+
+  const loadAll = React.useCallback(async () => {
     const active = await shiftService.getActiveShift();
     setActiveShift(active);
-  }, [shiftService]);
+    const profile = await settingsService.getStoreProfile();
+    setStoreName(profile.storeName);
+    const lang = await settingsService.getLanguage();
+    setLanguage(lang);
+    if (currentUserId) {
+      const me = await userService.findUser(currentUserId);
+      setIsAdmin(me?.role === 'admin');
+    } else {
+      setIsAdmin(false);
+    }
+  }, [currentUserId, settingsService, shiftService, userService]);
 
   useFocusEffect(
     React.useCallback(() => {
-      loadActive();
-    }, [loadActive]),
+      loadAll();
+    }, [loadAll]),
   );
 
   React.useEffect(() => {
-    loadActive();
-  }, [loadActive]);
+    loadAll();
+  }, [loadAll]);
 
   const handleShiftPrimary = React.useCallback(() => {
     if (activeShift) {
@@ -93,9 +113,9 @@ export const SettingsScreen = () => {
         <Text style={styles.groupLabel}>{t('settings.groupStore')}</Text>
         <View style={styles.groupCard}>
           <SettingsItem
-            subtitle={t('settings.storeSubtitle')}
+            subtitle={storeName ?? t('settings.storeSubtitle')}
             title={t('settings.storeTitle')}
-            onPress={() => {}}
+            onPress={() => navigation.navigate('StoreProfile')}
           />
         </View>
       </View>
@@ -115,9 +135,17 @@ export const SettingsScreen = () => {
         <Text style={styles.groupLabel}>{t('settings.groupApp')}</Text>
         <View style={styles.groupCard}>
           <SettingsItem
-            subtitle={t('settings.languageSubtitle')}
+            subtitle={language === 'en' ? 'English' : 'Indonesia'}
             title={t('settings.languageTitle')}
-            onPress={() => {}}
+            onPress={() => navigation.navigate('Language')}
+          />
+          <View style={styles.divider} />
+          <SettingsItem
+            subtitle={
+              isAdmin ? t('settings.users.subtitle') : t('settings.users.adminOnly')
+            }
+            title={t('settings.users.title')}
+            onPress={() => navigation.navigate('UserList')}
           />
         </View>
       </View>
@@ -140,6 +168,17 @@ export const SettingsScreen = () => {
             subtitle={t('settings.backupSubtitle')}
             title={t('settings.backupTitle')}
             onPress={() => navigation.navigate('Backup')}
+          />
+        </View>
+      </View>
+
+      <View style={styles.group}>
+        <Text style={styles.groupLabel}>{t('settings.groupDanger')}</Text>
+        <View style={[styles.groupCard, styles.dangerCard]}>
+          <SettingsItem
+            subtitle={t('settings.wipe.dangerSubtitle')}
+            title={t('settings.wipe.dangerTitle')}
+            onPress={() => navigation.navigate('WipeData')}
           />
         </View>
       </View>
@@ -172,6 +211,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     borderWidth: 1,
     overflow: 'hidden',
+  },
+  dangerCard: {
+    borderColor: colors.red[500],
   },
   item: {
     alignItems: 'center',

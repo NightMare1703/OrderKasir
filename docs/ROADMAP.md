@@ -172,7 +172,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   Export/import file; restore butuh preview + konfirmasi eksplisit; data sensitif (PIN hash) tidak ikut; enkripsi AES-GCM opsional.
   Selesai: roundtrip export→import utuh di device bersih.
 
-- [ ] **T3.9 — Pengaturan: toko, bahasa, user management, hapus data**
+- [x] **T3.9 — Pengaturan: toko, bahasa, user management, hapus data**
   Store config (nama, alamat, footer struk), ganti bahasa, kelola user (admin only), right-to-erasure.
   Selesai: semua setting tersimpan di tabel settings.
 

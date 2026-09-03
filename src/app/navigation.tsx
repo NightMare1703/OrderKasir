@@ -23,6 +23,11 @@ import { CustomerDebtDetailScreen } from '../features/customers/screens/Customer
 import { DebtDashboardScreen } from '../features/customers/screens/DebtDashboardScreen';
 import { PrinterSettingsScreen } from '../features/settings/screens/PrinterSettingsScreen';
 import { SettingsScreen } from '../features/settings/screens/SettingsScreen';
+import { StoreProfileScreen } from '../features/settings/screens/StoreProfileScreen';
+import { LanguageScreen } from '../features/settings/screens/LanguageScreen';
+import { UserListScreen } from '../features/settings/screens/UserListScreen';
+import { UserFormScreen } from '../features/settings/screens/UserFormScreen';
+import { WipeDataScreen } from '../features/settings/screens/WipeDataScreen';
 import { OpenShiftScreen } from '../features/shifts/screens/OpenShiftScreen';
 import { CloseShiftScreen } from '../features/shifts/screens/CloseShiftScreen';
 import { ShiftRecapScreen } from '../features/shifts/screens/ShiftRecapScreen';
@@ -65,6 +70,11 @@ export type HistoryStackParamList = {
 export type SettingsStackParamList = {
   SettingsMain: undefined;
   PrinterSettings: undefined;
+  StoreProfile: undefined;
+  Language: undefined;
+  UserList: undefined;
+  UserForm: { userId?: string };
+  WipeData: undefined;
   ShiftHistory: undefined;
   ShiftRecap: { shiftId: string };
   OpenShift: undefined;
@@ -100,6 +110,11 @@ const SettingsNavigator = () => (
       options={{ headerBackVisible: false, title: 'Pengaturan' }}
     />
     <SettingsStack.Screen component={PrinterSettingsScreen} name="PrinterSettings" />
+    <SettingsStack.Screen component={StoreProfileScreen} name="StoreProfile" />
+    <SettingsStack.Screen component={LanguageScreen} name="Language" />
+    <SettingsStack.Screen component={UserListScreen} name="UserList" />
+    <SettingsStack.Screen component={UserFormScreen} name="UserForm" />
+    <SettingsStack.Screen component={WipeDataScreen} name="WipeData" />
     <SettingsStack.Screen
       component={ShiftHistoryScreen}
       name="ShiftHistory"

@@ -109,6 +109,7 @@ Konvensi umum semua layar:
 | Aspek | Detail |
 |---|---|
 | Grup | Toko (nama, alamat, footer struk) · Printer (setup bluetooth, test print, ukuran kertas, jumlah copy) · Bahasa · Pengguna (admin: kelola kasir, role) · Backup (status sinkron, backup manual .zip, restore) · Zona bahaya (hapus permanen semua data, double confirm) |
+| File | `StoreProfileScreen` (nama/alamat/footer via `SettingsService`), `LanguageScreen` (persist `language` di settings + `changeAppLanguage`), `UserListScreen` + `UserFormScreen` (CRUD via `UserService`, admin-only, cegah nonaktifkan admin terakhir), `WipeDataScreen` (preview counts + ketik `HAPUS` + checkbox + `WipeService.unsafeResetDatabase`) |
 | Gaya | Airy (spacing lega), list group `black.800`, beda ritme dari POS yang padat |
 
 ---
