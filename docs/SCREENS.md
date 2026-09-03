@@ -99,8 +99,10 @@ Konvensi umum semua layar:
 |---|---|
 | Dashboard | Angka dulu: omzet hari ini, jumlah transaksi, rata-rata basket, laba kotor estimasi (labeled); periode chips: Hari ini/Kemarin/7 hari/Bulan ini |
 | Laporan detail | Penjualan (tren bar orange on black), Laba kotor (total + per produk), Produk (terlaris/slow-moving/margin), Stok (nilai persediaan), Piutang (aging), Shift (rekap) |
-| Export | Tombol share CSV pada semua laporan tabel |
+| Export | Tombol share CSV pada semua laporan tabel (via `Share.share` + `reportCsv.ts`) |
 | Aturan | Single accent color; tanpa rainbow; angka pakai tabular figures, tak pernah terpotong |
+| File | `src/features/reports/screens/ReportsDashboardScreen.tsx` + `src/utils/reportCsv.ts` + `src/utils/share.ts` + `src/services/ReportService.getDailySalesTrend` |
+| Route | `SettingsStack.ReportsDashboard` (“Laporan”) — akses dari `Lainnya → Laporan` |
 
 ## 11. Pengaturan — `settings.*`
 
@@ -120,7 +122,7 @@ LoginPin
    ├─ Riwayat ── TransactionDetail ── VoidSheet
    ├─ Produk ── ProductForm · Inventory(adjustment/log)
    ├─ Piutang ── CustomerDetail ── SettlementSheet
-   └─ Lainnya ── Reports* · Settings* · Shift*
+   └─ Lainnya ── ReportsDashboard · Settings* · Shift*
 ```
 
 Gate rules:

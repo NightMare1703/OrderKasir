@@ -123,6 +123,17 @@ export const SettingsScreen = () => {
       </View>
 
       <View style={styles.group}>
+        <Text style={styles.groupLabel}>{t('reports.title')}</Text>
+        <View style={styles.groupCard}>
+          <SettingsItem
+            subtitle={t('reports.subtitle')}
+            title={t('reports.title')}
+            onPress={() => navigation.navigate('ReportsDashboard')}
+          />
+        </View>
+      </View>
+
+      <View style={styles.group}>
         <Text style={styles.groupLabel}>{t('settings.groupData')}</Text>
         <View style={styles.groupCard}>
           <SettingsItem

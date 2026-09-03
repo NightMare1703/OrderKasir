@@ -470,6 +470,37 @@ export class ReportService {
     };
   }
 
+  async getDailySalesTrend(range: DateRange): Promise<Array<{ date: string; omzet: number; transactionCount: number }>> {
+    const { start, end } = normalizeRange(range);
+    const transactions = await this.getTransactionsInRange(start, end);
+    const byDate = new Map<string, { omzet: number; transactionCount: number }>();
+    const cursor = dayjs(start).startOf('day');
+    const last = dayjs(end).startOf('day');
+    for (
+      let d = cursor.clone();
+      d.valueOf() <= last.valueOf();
+      d = d.add(1, 'day')
+    ) {
+      const key = d.format('YYYY-MM-DD');
+      byDate.set(key, { omzet: 0, transactionCount: 0 });
+    }
+    for (const trx of transactions) {
+      const key = dayjs(trx.createdAt).format('YYYY-MM-DD');
+      const bucket = byDate.get(key);
+      if (bucket) {
+        bucket.omzet += trx.total;
+        bucket.transactionCount += 1;
+      } else {
+        byDate.set(key, { omzet: trx.total, transactionCount: 1 });
+      }
+    }
+    return Array.from(byDate.entries()).map(([date, data]) => ({
+      date,
+      omzet: data.omzet,
+      transactionCount: data.transactionCount,
+    }));
+  }
+
   private async getTransactionsInRange(start: number, end: number): Promise<Transaction[]> {
     const all = await this.database
       .get<Transaction>('transactions')

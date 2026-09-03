@@ -160,7 +160,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   File: `src/services/ReportService.ts`.
   Selesai: test angka laporan terhadap dataset sintetis; label "laba kotor estimasi".
 
-- [ ] **T3.6 — Layar dashboard & laporan + export CSV**
+- [x] **T3.6 — Layar dashboard & laporan + export CSV**
   Angka dulu, chart kedua; bar orange on black; export CSV semua laporan tabel + share sheet Android.
   Selesai: US-18–21 terpenuhi.
 

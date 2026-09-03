@@ -27,6 +27,7 @@ import { OpenShiftScreen } from '../features/shifts/screens/OpenShiftScreen';
 import { CloseShiftScreen } from '../features/shifts/screens/CloseShiftScreen';
 import { ShiftRecapScreen } from '../features/shifts/screens/ShiftRecapScreen';
 import { ShiftHistoryScreen } from '../features/shifts/screens/ShiftHistoryScreen';
+import { ReportsDashboardScreen } from '../features/reports/screens/ReportsDashboardScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -67,6 +68,7 @@ export type SettingsStackParamList = {
   ShiftRecap: { shiftId: string };
   OpenShift: undefined;
   CloseShift: { shiftId: string };
+  ReportsDashboard: undefined;
 };
 
 export type CustomersStackParamList = {
@@ -115,6 +117,11 @@ const SettingsNavigator = () => (
       component={CloseShiftScreen}
       name="CloseShift"
       options={{ title: 'Tutup Shift' }}
+    />
+    <SettingsStack.Screen
+      component={ReportsDashboardScreen}
+      name="ReportsDashboard"
+      options={{ title: 'Laporan' }}
     />
   </SettingsStack.Navigator>
 );
