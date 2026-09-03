@@ -151,7 +151,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   File: `src/services/DebtService.ts`, model `customer`, `debt`, `debt-payment`.
   Selesai: test transitions; `paid_amount` = SUM(debt_payments) diverifikasi.
 
-- [ ] **T3.4 — Dashboard piutang + pelunasan + pengingat**
+- [x] **T3.4 — Dashboard piutang + pelunasan + pengingat**
   Total beredar, filter jatuh tempo, local notification bon due hari ini (default on).
   Selesai: US-15–17 terpenuhi.
 

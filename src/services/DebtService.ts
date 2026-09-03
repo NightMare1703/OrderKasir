@@ -1,4 +1,5 @@
 import { Database, Q } from '@nozbe/watermelondb';
+import dayjs from 'dayjs';
 
 import Customer from '../database/models/customer';
 import Debt, { DebtStatus } from '../database/models/debt';
@@ -89,6 +90,33 @@ export type RecordDebtPaymentResult =
   | { status: 'shift_not_found'; shiftId: string }
   | { status: 'already_paid'; debtId: string }
   | { status: 'amount_exceeds_remaining'; remaining: number; requested: number };
+
+export type DebtDueFilter = 'all' | 'due_today' | 'overdue';
+
+export type CustomerOutstandingAggregate = {
+  customerId: string;
+  customer: Customer | null;
+  outstanding: number;
+  debtCount: number;
+  earliestDueDate: number | null;
+  debts: Debt[];
+};
+
+export type DebtDashboardSummary = {
+  totalOutstanding: number;
+  outstandingCount: number;
+  dueTodayCount: number;
+  overdueCount: number;
+  dueTodayOutstanding: number;
+  overdueOutstanding: number;
+  customerAggregates: CustomerOutstandingAggregate[];
+};
+
+export type UpdateDueDateResult =
+  | { status: 'ok'; debt: Debt }
+  | { status: 'debt_not_found'; debtId: string }
+  | { status: 'invalid_due_date' }
+  | { status: 'debt_already_paid'; debtId: string };
 
 export type DebtDetail = {
   debt: Debt;
@@ -360,6 +388,170 @@ export class DebtService {
       .fetch();
   }
 
+  async getTotalOutstanding(): Promise<number> {
+    const debts = await this.database
+      .get<Debt>('debts')
+      .query(Q.where('deleted', false))
+      .fetch();
+    let total = 0;
+    for (const debt of debts) {
+      if (debt.status !== 'paid') {
+        total += debt.totalAmount - debt.paidAmount;
+      }
+    }
+    return total;
+  }
+
+  async listOutstandingDebts(): Promise<Debt[]> {
+    const debts = await this.database
+      .get<Debt>('debts')
+      .query(Q.where('deleted', false))
+      .fetch();
+    return debts.filter((debt) => debt.status !== 'paid');
+  }
+
+  async getDueTodayDebts(nowMs?: number): Promise<Debt[]> {
+    return this.listDebtsByDueFilter('due_today', nowMs);
+  }
+
+  async getOverdueDebts(nowMs?: number): Promise<Debt[]> {
+    return this.listDebtsByDueFilter('overdue', nowMs);
+  }
+
+  async listDebtsByDueFilter(filter: DebtDueFilter, nowMs?: number): Promise<Debt[]> {
+    const now = nowMs ?? this.now();
+    const { start, end } = getDayBounds(now);
+    const debts = await this.database
+      .get<Debt>('debts')
+      .query(Q.where('deleted', false))
+      .fetch();
+
+    const outstanding = debts.filter((debt) => debt.status !== 'paid');
+
+    if (filter === 'all') {
+      return sortDebtsByDueDate(outstanding);
+    }
+    if (filter === 'due_today') {
+      const matched = outstanding.filter(
+        (debt) => debt.dueDate !== null && debt.dueDate >= start && debt.dueDate <= end,
+      );
+      return sortDebtsByDueDate(matched);
+    }
+    // overdue: dueDate < start of today
+    const matched = outstanding.filter(
+      (debt) => debt.dueDate !== null && debt.dueDate < start,
+    );
+    return sortDebtsByDueDate(matched);
+  }
+
+  async getCustomerAggregates(
+    filter: DebtDueFilter = 'all',
+    nowMs?: number,
+  ): Promise<CustomerOutstandingAggregate[]> {
+    const debts = await this.listDebtsByDueFilter(filter, nowMs);
+    const map = new Map<string, CustomerOutstandingAggregate>();
+
+    for (const debt of debts) {
+      const existing = map.get(debt.customerId);
+      const remaining = debt.totalAmount - debt.paidAmount;
+      if (existing) {
+        existing.outstanding += remaining;
+        existing.debtCount += 1;
+        existing.debts.push(debt);
+        if (debt.dueDate !== null) {
+          if (existing.earliestDueDate === null || debt.dueDate < existing.earliestDueDate) {
+            existing.earliestDueDate = debt.dueDate;
+          }
+        }
+      } else {
+        map.set(debt.customerId, {
+          customerId: debt.customerId,
+          customer: null,
+          outstanding: remaining,
+          debtCount: 1,
+          earliestDueDate: debt.dueDate,
+          debts: [debt],
+        });
+      }
+    }
+
+    const aggregates = Array.from(map.values());
+
+    await Promise.all(
+      aggregates.map(async (aggregate) => {
+        try {
+          const customer = await this.database.get<Customer>('customers').find(aggregate.customerId);
+          aggregate.customer = customer._getRaw('deleted') ? null : customer;
+        } catch {
+          aggregate.customer = null;
+        }
+      }),
+    );
+
+    aggregates.sort((a, b) => {
+      if (a.earliestDueDate === null && b.earliestDueDate === null) {
+        return b.outstanding - a.outstanding;
+      }
+      if (a.earliestDueDate === null) return 1;
+      if (b.earliestDueDate === null) return -1;
+      if (a.earliestDueDate !== b.earliestDueDate) {
+        return a.earliestDueDate - b.earliestDueDate;
+      }
+      return b.outstanding - a.outstanding;
+    });
+
+    return aggregates;
+  }
+
+  async getDashboardSummary(nowMs?: number): Promise<DebtDashboardSummary> {
+    const now = nowMs ?? this.now();
+    const totalOutstanding = await this.getTotalOutstanding();
+    const outstandingDebts = await this.listOutstandingDebts();
+    const dueTodayDebts = await this.getDueTodayDebts(now);
+    const overdueDebts = await this.getOverdueDebts(now);
+    const dueTodayOutstanding = dueTodayDebts.reduce(
+      (sum, debt) => sum + (debt.totalAmount - debt.paidAmount),
+      0,
+    );
+    const overdueOutstanding = overdueDebts.reduce(
+      (sum, debt) => sum + (debt.totalAmount - debt.paidAmount),
+      0,
+    );
+    const customerAggregates = await this.getCustomerAggregates('all', now);
+
+    return {
+      totalOutstanding,
+      outstandingCount: outstandingDebts.length,
+      dueTodayCount: dueTodayDebts.length,
+      overdueCount: overdueDebts.length,
+      dueTodayOutstanding,
+      overdueOutstanding,
+      customerAggregates,
+    };
+  }
+
+  async updateDueDate(debtId: string, dueDate: number | null): Promise<UpdateDueDateResult> {
+    if (dueDate !== null && (typeof dueDate !== 'number' || !Number.isFinite(dueDate))) {
+      return { status: 'invalid_due_date' };
+    }
+    const debt = await this.findDebt(debtId);
+    if (!debt) {
+      return { status: 'debt_not_found', debtId };
+    }
+    if (debt.status === 'paid') {
+      return { status: 'debt_already_paid', debtId };
+    }
+    const timestamp = this.now();
+    await this.database.write(async () => {
+      await debt.update((raw) => {
+        raw.dueDate = dueDate;
+        raw.updatedAt = timestamp;
+        raw._setRaw('last_modified', timestamp);
+      });
+    });
+    return { status: 'ok', debt };
+  }
+
   private async evaluateDebtLimit(customerId: string, additionalAmount: number): Promise<DebtLimitWarning[]> {
     const customer = await this.findActiveCustomer(customerId);
     if (!customer || customer.debtLimit === null) {
@@ -412,3 +604,21 @@ export class DebtService {
     }
   }
 }
+
+const getDayBounds = (nowMs: number): { start: number; end: number } => {
+  const d = dayjs(nowMs);
+  return { start: d.startOf('day').valueOf(), end: d.endOf('day').valueOf() };
+};
+
+const sortDebtsByDueDate = (debts: Debt[]): Debt[] =>
+  [...debts].sort((a, b) => {
+    if (a.dueDate === null && b.dueDate === null) {
+      return b.createdAt - a.createdAt;
+    }
+    if (a.dueDate === null) return 1;
+    if (b.dueDate === null) return -1;
+    if (a.dueDate !== b.dueDate) {
+      return a.dueDate - b.dueDate;
+    }
+    return b.createdAt - a.createdAt;
+  });

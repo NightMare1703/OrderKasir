@@ -19,7 +19,8 @@ import { ProductListScreen } from '../features/products/screens/ProductListScree
 import { InventoryScreen } from '../features/inventory/screens/InventoryScreen';
 import { StockAdjustmentScreen } from '../features/inventory/screens/StockAdjustmentScreen';
 import { StockMovementLogScreen } from '../features/inventory/screens/StockMovementLogScreen';
-import { PlaceholderScreen } from './PlaceholderScreen';
+import { CustomerDebtDetailScreen } from '../features/customers/screens/CustomerDebtDetailScreen';
+import { DebtDashboardScreen } from '../features/customers/screens/DebtDashboardScreen';
 import { PrinterSettingsScreen } from '../features/settings/screens/PrinterSettingsScreen';
 import { SettingsScreen } from '../features/settings/screens/SettingsScreen';
 import { OpenShiftScreen } from '../features/shifts/screens/OpenShiftScreen';
@@ -68,16 +69,18 @@ export type SettingsStackParamList = {
   CloseShift: { shiftId: string };
 };
 
+export type CustomersStackParamList = {
+  DebtDashboard: undefined;
+  CustomerDebtDetail: { customerId: string };
+};
+
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const MainTabs = createBottomTabNavigator<MainTabParamList>();
 const ProductsStack = createNativeStackNavigator<ProductsStackParamList>();
 const PosStack = createNativeStackNavigator<PosStackParamList>();
 const HistoryStack = createNativeStackNavigator<HistoryStackParamList>();
 const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
-
-// Stub layar kosong sesuai SCREENS.md peta navigasi: LoginPin → MainTabs.
-// Diganti layar sungguhan pada task masing-masing.
-const DebtsTabStub = () => <PlaceholderScreen titleKey="customers.title" />;
+const CustomersStack = createNativeStackNavigator<CustomersStackParamList>();
 
 const SettingsNavigator = () => (
   <SettingsStack.Navigator
@@ -164,6 +167,23 @@ const HistoryNavigator = () => (
   </HistoryStack.Navigator>
 );
 
+const CustomersNavigator = () => (
+  <CustomersStack.Navigator
+    screenOptions={{
+      contentStyle: { backgroundColor: colors.black[900] },
+      headerStyle: { backgroundColor: colors.black[900] },
+      headerTintColor: colors.white[50],
+      headerTitleStyle: typography.heading,
+    }}>
+    <CustomersStack.Screen
+      component={DebtDashboardScreen}
+      name="DebtDashboard"
+      options={{ headerBackVisible: false, title: 'Piutang' }}
+    />
+    <CustomersStack.Screen component={CustomerDebtDetailScreen} name="CustomerDebtDetail" />
+  </CustomersStack.Navigator>
+);
+
 const navigationTheme: Theme = {
   ...DefaultTheme,
   dark: true,
@@ -209,7 +229,7 @@ const MainTabsNavigator = () => {
       />
       <MainTabs.Screen
         name="DebtsTab"
-        component={DebtsTabStub}
+        component={CustomersNavigator}
         options={{ tabBarLabel: t('customers.title') }}
       />
       <MainTabs.Screen
