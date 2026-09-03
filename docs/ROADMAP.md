@@ -168,7 +168,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   Implementasi `SyncService` berbasis `synchronize({pullChanges, pushChanges})` dengan Firebase sync-adapter swappable (PRD §5.9.1 — menggantikan `sync_queue` custom); `sync_queue` dihapus dari schema v1; `lastPulledAt` dikelola di `settings`; push incremental debounced saat online + pull saat restore; last-write-wins via `last_modified`; indikator status header (synced/pending N/offline) via `hasUnsyncedChanges()`/`getSyncStatus()`.
   Selesai: test queue drain dengan adapter mock; core flow tetap jalan offline penuh.
 
-- [ ] **T3.8 — Backup file manual (.zip JSON) + restore**
+- [x] **T3.8 — Backup file manual (.zip JSON) + restore**
   Export/import file; restore butuh preview + konfirmasi eksplisit; data sensitif (PIN hash) tidak ikut; enkripsi AES-GCM opsional.
   Selesai: roundtrip export→import utuh di device bersih.
 

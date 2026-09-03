@@ -28,6 +28,7 @@ import { CloseShiftScreen } from '../features/shifts/screens/CloseShiftScreen';
 import { ShiftRecapScreen } from '../features/shifts/screens/ShiftRecapScreen';
 import { ShiftHistoryScreen } from '../features/shifts/screens/ShiftHistoryScreen';
 import { ReportsDashboardScreen } from '../features/reports/screens/ReportsDashboardScreen';
+import { BackupScreen } from '../features/settings/screens/BackupScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -69,6 +70,7 @@ export type SettingsStackParamList = {
   OpenShift: undefined;
   CloseShift: { shiftId: string };
   ReportsDashboard: undefined;
+  Backup: undefined;
 };
 
 export type CustomersStackParamList = {
@@ -123,6 +125,7 @@ const SettingsNavigator = () => (
       name="ReportsDashboard"
       options={{ title: 'Laporan' }}
     />
+    <SettingsStack.Screen component={BackupScreen} name="Backup" options={{ title: 'Backup & restore' }} />
   </SettingsStack.Navigator>
 );
 

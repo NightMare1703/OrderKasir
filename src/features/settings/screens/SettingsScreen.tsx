@@ -139,7 +139,7 @@ export const SettingsScreen = () => {
           <SettingsItem
             subtitle={t('settings.backupSubtitle')}
             title={t('settings.backupTitle')}
-            onPress={() => {}}
+            onPress={() => navigation.navigate('Backup')}
           />
         </View>
       </View>
