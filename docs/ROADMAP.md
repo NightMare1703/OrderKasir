@@ -164,8 +164,8 @@ Legend: 🧪 = wajib ada unit test Jest.
   Angka dulu, chart kedua; bar orange on black; export CSV semua laporan tabel + share sheet Android.
   Selesai: US-18–21 terpenuhi.
 
-- [ ] **T3.7 — Sync queue & SyncService (Firebase adapter)** 🧪
-  Semua write domain append `sync_queue`; drain batched saat online; last-write-wins via `last_modified`; indikator status header (synced/pending N/offline).
+- [x] **T3.7 — Sync queue & SyncService (Firebase adapter)** 🧪
+  Implementasi `SyncService` berbasis `synchronize({pullChanges, pushChanges})` dengan Firebase sync-adapter swappable (PRD §5.9.1 — menggantikan `sync_queue` custom); `sync_queue` dihapus dari schema v1; `lastPulledAt` dikelola di `settings`; push incremental debounced saat online + pull saat restore; last-write-wins via `last_modified`; indikator status header (synced/pending N/offline) via `hasUnsyncedChanges()`/`getSyncStatus()`.
   Selesai: test queue drain dengan adapter mock; core flow tetap jalan offline penuh.
 
 - [ ] **T3.8 — Backup file manual (.zip JSON) + restore**
