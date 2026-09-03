@@ -155,7 +155,7 @@ Legend: 🧪 = wajib ada unit test Jest.
   Total beredar, filter jatuh tempo, local notification bon due hari ini (default on).
   Selesai: US-15–17 terpenuhi.
 
-- [ ] **T3.5 — ReportService** 🧪
+- [x] **T3.5 — ReportService** 🧪
   Query dari data LOKAL (snapshot items): omzet, laba kotor estimasi, terlaris, breakdown metode, nilai persediaan, aging piutang.
   File: `src/services/ReportService.ts`.
   Selesai: test angka laporan terhadap dataset sintetis; label "laba kotor estimasi".
