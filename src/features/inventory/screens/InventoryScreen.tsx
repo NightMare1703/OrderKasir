@@ -1,7 +1,8 @@
+import { FlashList } from '@shopify/flash-list';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { database } from '../../../database';
 import type Product from '../../../database/models/product';
@@ -19,7 +20,7 @@ type RowProps = {
   onLog: () => void;
 };
 
-const InventoryRow = ({ product, onAdjust, onLog }: RowProps) => {
+const InventoryRow = React.memo(({ product, onAdjust, onLog }: RowProps) => {
   const { t } = useTranslation();
   const isLow = product.stock <= product.minStock;
   const isOut = product.stock <= 0;
@@ -57,7 +58,8 @@ const InventoryRow = ({ product, onAdjust, onLog }: RowProps) => {
       </View>
     </View>
   );
-};
+});
+InventoryRow.displayName = 'InventoryRow';
 
 export const InventoryScreen = ({ navigation }: Props) => {
   const { t } = useTranslation();
@@ -213,13 +215,15 @@ export const InventoryScreen = ({ navigation }: Props) => {
         </View>
       ) : null}
 
-      <FlatList
-        contentContainerStyle={styles.listContent}
-        data={displayed}
-        keyExtractor={keyExtractor}
-        renderItem={renderItem}
-        ListEmptyComponent={emptyComponent ?? undefined}
-      />
+      <View style={styles.listWrap}>
+        <FlashList
+          contentContainerStyle={styles.listContent}
+          data={displayed}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
+          ListEmptyComponent={emptyComponent ?? undefined}
+        />
+      </View>
     </View>
   );
 };
@@ -343,8 +347,11 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.white[50],
   },
+  listWrap: {
+    flex: 1,
+    minHeight: 200,
+  },
   listContent: {
-    flexGrow: 1,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
   },

@@ -1,8 +1,9 @@
+import { FlashList } from '@shopify/flash-list';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import dayjs from 'dayjs';
 import * as React from 'react';
-import { ActivityIndicator, FlatList, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import type { CustomersStackParamList } from '../../../app/navigation';
@@ -27,7 +28,7 @@ type DebtRowProps = {
   t: (key: string, opts?: Record<string, unknown>) => string;
 };
 
-const DebtRow = ({ debt, onPay, onEditDueDate, t }: DebtRowProps) => {
+const DebtRow = React.memo(({ debt, onPay, onEditDueDate, t }: DebtRowProps) => {
   const remaining = debt.totalAmount - debt.paidAmount;
   const isPaid = debt.status === 'paid';
   const dueLabel = debt.dueDate ? dayjs(debt.dueDate).format('DD MMM YYYY') : null;
@@ -95,7 +96,8 @@ const DebtRow = ({ debt, onPay, onEditDueDate, t }: DebtRowProps) => {
       ) : null}
     </View>
   );
-};
+});
+DebtRow.displayName = 'DebtRow';
 
 export const CustomerDebtDetailScreen = ({ route, navigation }: Props) => {
   const { t } = useTranslation();
@@ -270,47 +272,49 @@ export const CustomerDebtDetailScreen = ({ route, navigation }: Props) => {
         ) : null}
       </View>
 
-      <FlatList
-        data={debts}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        ListHeaderComponent={
-          <View style={styles.listHeader}>
-            <Text style={styles.sectionTitle}>{t('debts.debtsListTitle')}</Text>
-            {debts.length === 0 ? (
-              <View style={styles.emptyInline}>
-                <Text style={styles.emptyInlineText}>{t('debts.customerNoDebts')}</Text>
-              </View>
-            ) : null}
-          </View>
-        }
-        renderItem={({ item }) => (
-          <DebtRow
-            debt={item}
-            onPay={openPay}
-            onEditDueDate={(debt) => setDueDateModal({ visible: true, debt })}
-            t={t as (k: string, o?: Record<string, unknown>) => string}
-          />
-        )}
-        ListFooterComponent={
-          payments.length > 0 ? (
-            <View style={styles.paymentsSection}>
-              <Text style={styles.sectionTitle}>{t('debts.paymentsHistoryTitle')}</Text>
-              {payments.map((payment) => (
-                <View key={payment.id} style={styles.paymentRow}>
-                  <View style={styles.paymentLeft}>
-                    <Text style={styles.paymentAmount}>{formatRupiah(payment.amount)}</Text>
-                    <Text style={styles.paymentMeta}>
-                      {t(`debts.method_${payment.method}`)} · {dayjs(payment.paidAt).format('DD MMM HH:mm')}
-                      {payment.reference ? ` · ${payment.reference}` : ''}
-                    </Text>
-                  </View>
+      <View style={styles.listWrap}>
+        <FlashList
+          data={debts}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          ListHeaderComponent={
+            <View style={styles.listHeader}>
+              <Text style={styles.sectionTitle}>{t('debts.debtsListTitle')}</Text>
+              {debts.length === 0 ? (
+                <View style={styles.emptyInline}>
+                  <Text style={styles.emptyInlineText}>{t('debts.customerNoDebts')}</Text>
                 </View>
-              ))}
+              ) : null}
             </View>
-          ) : undefined
-        }
-      />
+          }
+          renderItem={({ item }) => (
+            <DebtRow
+              debt={item}
+              onPay={openPay}
+              onEditDueDate={(debt) => setDueDateModal({ visible: true, debt })}
+              t={t as (k: string, o?: Record<string, unknown>) => string}
+            />
+          )}
+          ListFooterComponent={
+            payments.length > 0 ? (
+              <View style={styles.paymentsSection}>
+                <Text style={styles.sectionTitle}>{t('debts.paymentsHistoryTitle')}</Text>
+                {payments.map((payment) => (
+                  <View key={payment.id} style={styles.paymentRow}>
+                    <View style={styles.paymentLeft}>
+                      <Text style={styles.paymentAmount}>{formatRupiah(payment.amount)}</Text>
+                      <Text style={styles.paymentMeta}>
+                        {t(`debts.method_${payment.method}`)} · {dayjs(payment.paidAt).format('DD MMM HH:mm')}
+                        {payment.reference ? ` · ${payment.reference}` : ''}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : undefined
+          }
+        />
+      </View>
 
       <Modal visible={settlement.visible} transparent animationType="slide" onRequestClose={closePay}>
         <View style={styles.modalOverlay}>
@@ -432,6 +436,10 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.white[300],
     marginTop: spacing.sm,
+  },
+  listWrap: {
+    flex: 1,
+    minHeight: 200,
   },
   listContent: {
     paddingHorizontal: spacing.lg,

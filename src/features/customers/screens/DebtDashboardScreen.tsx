@@ -4,9 +4,9 @@ import dayjs from 'dayjs';
 import * as React from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { FlashList } from '@shopify/flash-list';
 import {
   ActivityIndicator,
-  FlatList,
   Modal,
   StyleSheet,
   Text,
@@ -401,13 +401,15 @@ export const DebtDashboardScreen = () => {
         />
       </View>
 
-      <FlatList
-        data={filteredAggregates}
-        keyExtractor={keyExtractor}
-        renderItem={renderAggregate}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={emptyComponent ?? undefined}
-      />
+      <View style={styles.listWrap}>
+        <FlashList
+          data={filteredAggregates}
+          keyExtractor={keyExtractor}
+          renderItem={renderAggregate}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={emptyComponent ?? undefined}
+        />
+      </View>
 
       <Modal
         visible={settlement.visible}
@@ -616,11 +618,13 @@ const styles = StyleSheet.create({
     lineHeight: 11,
     fontWeight: '700',
   },
+  listWrap: {
+    flex: 1,
+    minHeight: 200,
+  },
   listContent: {
-    flexGrow: 1,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
-    gap: spacing.sm,
   },
   card: {
     backgroundColor: colors.black[800],

@@ -1,8 +1,9 @@
+import { FlashList } from '@shopify/flash-list';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import dayjs from 'dayjs';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { database } from '../../../database';
 import type Product from '../../../database/models/product';
@@ -39,63 +40,66 @@ const typeI18nSuffix: Record<string, string> = {
   return: 'type_return',
 };
 
-const MovementRow = ({
-  row,
-  showProductName,
-}: {
-  row: EnrichedRow;
-  showProductName: boolean;
-}) => {
-  const { t } = useTranslation();
-  const { movement, productName, userName } = row;
-  const suffix = typeI18nSuffix[movement.type] ?? movement.type;
-  const labelKey = `inventory.log.${suffix}`;
-  const label = (t as (key: string, opts?: unknown) => string)(labelKey, {
-    defaultValue: movement.type,
-  });
-  const badgeColor = typeBadgeColor[movement.type] ?? colors.white[300];
-  const qtySign = movement.qty > 0 ? '+' : '';
-  const qtyText = `${qtySign}${movement.qty}`;
-  const qtyColor = movement.qty > 0 ? colors.green[500] : colors.red[500];
-  const dateLabel = dayjs(movement.createdAt).format('DD MMM YYYY, HH.mm');
+const MovementRow = React.memo(
+  ({
+    row,
+    showProductName,
+  }: {
+    row: EnrichedRow;
+    showProductName: boolean;
+  }) => {
+    const { t } = useTranslation();
+    const { movement, productName, userName } = row;
+    const suffix = typeI18nSuffix[movement.type] ?? movement.type;
+    const labelKey = `inventory.log.${suffix}`;
+    const label = (t as (key: string, opts?: unknown) => string)(labelKey, {
+      defaultValue: movement.type,
+    });
+    const badgeColor = typeBadgeColor[movement.type] ?? colors.white[300];
+    const qtySign = movement.qty > 0 ? '+' : '';
+    const qtyText = `${qtySign}${movement.qty}`;
+    const qtyColor = movement.qty > 0 ? colors.green[500] : colors.red[500];
+    const dateLabel = dayjs(movement.createdAt).format('DD MMM YYYY, HH.mm');
 
-  return (
-    <View style={styles.row}>
-      <View style={styles.rowTop}>
-        <View style={[styles.typeBadge, { backgroundColor: badgeColor }]}>
-          <Text style={styles.typeBadgeText}>{label}</Text>
+    return (
+      <View style={styles.row}>
+        <View style={styles.rowTop}>
+          <View style={[styles.typeBadge, { backgroundColor: badgeColor }]}>
+            <Text style={styles.typeBadgeText}>{label}</Text>
+          </View>
+          <Text style={styles.rowDate}>{dateLabel}</Text>
         </View>
-        <Text style={styles.rowDate}>{dateLabel}</Text>
+
+        {showProductName ? <Text style={styles.rowProduct}>{productName}</Text> : null}
+
+        <View style={styles.rowQtyRow}>
+          <Text style={[styles.rowQty, { color: qtyColor }]}>{qtyText}</Text>
+          <Text style={styles.rowStockAfter}>
+            {t('inventory.log.stockAfter')}: {movement.stockAfter}
+          </Text>
+        </View>
+
+        <Text style={styles.rowMeta}>
+          {movement.stockBefore} → {movement.stockAfter}
+          {movement.reason ? ` · ${movement.reason}` : ''}
+        </Text>
+
+        {userName ? (
+          <Text style={styles.rowUser}>
+            {t('inventory.log.user')}: {userName}
+          </Text>
+        ) : null}
+
+        {movement.refType || movement.refId ? (
+          <Text style={styles.rowRef}>
+            {t('inventory.log.ref')}: {[movement.refType, movement.refId].filter(Boolean).join(' / ')}
+          </Text>
+        ) : null}
       </View>
-
-      {showProductName ? <Text style={styles.rowProduct}>{productName}</Text> : null}
-
-      <View style={styles.rowQtyRow}>
-        <Text style={[styles.rowQty, { color: qtyColor }]}>{qtyText}</Text>
-        <Text style={styles.rowStockAfter}>
-          {t('inventory.log.stockAfter')}: {movement.stockAfter}
-        </Text>
-      </View>
-
-      <Text style={styles.rowMeta}>
-        {movement.stockBefore} → {movement.stockAfter}
-        {movement.reason ? ` · ${movement.reason}` : ''}
-      </Text>
-
-      {userName ? (
-        <Text style={styles.rowUser}>
-          {t('inventory.log.user')}: {userName}
-        </Text>
-      ) : null}
-
-      {movement.refType || movement.refId ? (
-        <Text style={styles.rowRef}>
-          {t('inventory.log.ref')}: {[movement.refType, movement.refId].filter(Boolean).join(' / ')}
-        </Text>
-      ) : null}
-    </View>
-  );
-};
+    );
+  },
+);
+MovementRow.displayName = 'MovementRow';
 
 export const StockMovementLogScreen = ({ route, navigation }: Props) => {
   const { t } = useTranslation();
@@ -204,13 +208,15 @@ export const StockMovementLogScreen = ({ route, navigation }: Props) => {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        contentContainerStyle={styles.listContent}
-        data={filteredRows ?? []}
-        keyExtractor={keyExtractor}
-        renderItem={renderItem}
-        ListEmptyComponent={emptyComponent ?? undefined}
-      />
+      <View style={styles.listWrap}>
+        <FlashList
+          contentContainerStyle={styles.listContent}
+          data={filteredRows ?? []}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
+          ListEmptyComponent={emptyComponent ?? undefined}
+        />
+      </View>
     </View>
   );
 };
@@ -220,8 +226,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.black[900],
     flex: 1,
   },
+  listWrap: {
+    flex: 1,
+    minHeight: 200,
+  },
   listContent: {
-    flexGrow: 1,
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
   },

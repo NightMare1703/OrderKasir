@@ -1,8 +1,9 @@
+import { FlashList } from '@shopify/flash-list';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { database } from '../../../database';
 import type User from '../../../database/models/user';
@@ -83,18 +84,20 @@ export const UserListScreen = (): React.JSX.Element => {
         </View>
       ) : null}
 
-      <FlatList
-        contentContainerStyle={styles.listContent}
-        data={users}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>{t('settings.users.emptyTitle')}</Text>
-            <Text style={styles.emptyHint}>{t('settings.users.emptyHint')}</Text>
-          </View>
-        }
-      />
+      <View style={styles.listWrap}>
+        <FlashList
+          contentContainerStyle={styles.listContent}
+          data={users}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Text style={styles.emptyTitle}>{t('settings.users.emptyTitle')}</Text>
+              <Text style={styles.emptyHint}>{t('settings.users.emptyHint')}</Text>
+            </View>
+          }
+        />
+      </View>
 
       {isAdmin ? (
         <View style={styles.footer}>
@@ -131,6 +134,10 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.black[900],
     fontWeight: '600',
+  },
+  listWrap: {
+    flex: 1,
+    minHeight: 200,
   },
   listContent: {
     padding: spacing.lg,

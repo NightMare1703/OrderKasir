@@ -176,9 +176,9 @@ Legend: 🧪 = wajib ada unit test Jest.
   Store config (nama, alamat, footer struk), ganti bahasa, kelola user (admin only), right-to-erasure.
   Selesai: semua setting tersimpan di tabel settings.
 
-- [ ] **T3.10 — Perf & polish pass**
+- [x] **T3.10 — Perf & polish pass**
   Audit: cold start, FlashList di semua list panjang, render murah grid POS; hapus console.log; rapikan i18n yang belum terpakai.
-  Selesai: checklist NFR PRD §6 dicek satu per satu dan dicatat hasilnya.
+  Selesai: checklist NFR PRD §6 dicek satu per satu dan dicatat hasilnya — lihat `docs/PERF_AUDIT.md`.
 
 ---
 

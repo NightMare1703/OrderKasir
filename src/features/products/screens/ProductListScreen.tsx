@@ -1,8 +1,9 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import * as React from 'react';
-import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
+import { FlashList } from '@shopify/flash-list';
 import { database } from '../../../database';
 import Product from '../../../database/models/product';
 import { ProductService } from '../../../services/ProductService';
@@ -45,7 +46,7 @@ type RowProps = {
 
 // Stok tampil sebagai angka polos tanpa "Rp" (GLOSSARY §3); merah bila ≤ stok
 // minimum + teks "Nonaktif" agar status tidak bergantung warna saja.
-const ProductRow = ({ item, onPress }: RowProps) => {
+const ProductRow = React.memo(({ item, onPress }: RowProps) => {
   const { t } = useTranslation();
   const lowStock = item.stock <= item.minStock;
 
@@ -65,7 +66,8 @@ const ProductRow = ({ item, onPress }: RowProps) => {
       </View>
     </TouchableOpacity>
   );
-};
+});
+ProductRow.displayName = 'ProductRow';
 
 export const ProductListScreen = ({ navigation }: ProductListScreenProps) => {
   const { t } = useTranslation();
@@ -160,22 +162,24 @@ export const ProductListScreen = ({ navigation }: ProductListScreenProps) => {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        contentContainerStyle={styles.listContent}
-        data={products ?? []}
-        keyExtractor={(item) => item.id}
-        renderItem={renderRow}
-        ListEmptyComponent={
-          products !== null && products.length === 0 ? (
-            <ListEmptyState
-              messageKey={isEmptyWithoutQuery ? 'products.emptyTitle' : 'products.searchEmpty'}
-              query={query.trim()}
-              showCta={isEmptyWithoutQuery}
-              onCtaPress={() => openForm()}
-            />
-          ) : undefined
-        }
-      />
+      <View style={styles.listWrap}>
+        <FlashList
+          contentContainerStyle={styles.listContent}
+          data={products ?? []}
+          keyExtractor={(item) => item.id}
+          renderItem={renderRow}
+          ListEmptyComponent={
+            products !== null && products.length === 0 ? (
+              <ListEmptyState
+                messageKey={isEmptyWithoutQuery ? 'products.emptyTitle' : 'products.searchEmpty'}
+                query={query.trim()}
+                showCta={isEmptyWithoutQuery}
+                onCtaPress={() => openForm()}
+              />
+            ) : undefined
+          }
+        />
+      </View>
 
       {!isEmptyWithoutQuery ? (
         <TouchableOpacity
@@ -247,8 +251,11 @@ const styles = StyleSheet.create({
     ...typography.title,
     color: colors.black[900],
   },
+  listWrap: {
+    flex: 1,
+    minHeight: 200,
+  },
   listContent: {
-    flexGrow: 1,
     paddingBottom: spacing.xxl,
     paddingHorizontal: spacing.lg,
   },
